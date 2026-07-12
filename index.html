@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>戦闘ロジック検証 — リソース制バトル(プロトタイプ)</title>
+<style>
+  :root{
+    --bg:#12141c; --panel:#1a1d29; --panel2:#20243380; --ink:#e7e9f0; --sub:#8b93ad;
+    --gold:#e8c86a; --hp:#57c25a; --ep:#e07bb0; --en:#5aa7e0; --warn:#e0695a; --line:#2c3244;
+    --mono:'DejaVu Sans Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,'Segoe UI',sans-serif;font-size:14px;line-height:1.5}
+  .wrap{max-width:1060px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:19px;font-weight:700;letter-spacing:.02em;margin:0 0 2px}
+  h1 .tag{font:600 11px var(--mono);color:var(--gold);border:1px solid var(--line);padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:2px}
+  .lead{color:var(--sub);margin:0 0 20px;font-size:12.5px}
+  .lead b{color:var(--ink)}
+  /* 余白で区切る。線は最小限、面の明度差で分ける */
+  .setup{display:flex;flex-wrap:wrap;gap:14px 22px;background:var(--panel);padding:16px 18px;border-radius:10px;margin-bottom:18px}
+  .fld{display:flex;flex-direction:column;gap:4px}
+  .fld label{font-size:11px;color:var(--sub);letter-spacing:.04em}
+  select,input{background:#0e1017;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit}
+  .btn{background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;padding:8px 14px;font:600 13px inherit;cursor:pointer;transition:.12s}
+  .btn:hover{color:var(--ink);border-color:#485270}
+  .btn.go{background:var(--gold);color:#20180a;border-color:var(--gold)}
+  .btn.go:hover{background:#ffdf8c}
+  .arena{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px}
+  .card{background:var(--panel);border-radius:10px;padding:15px 16px;min-height:150px}
+  .card .who{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .card .who b{font-size:16px}
+  .card .who .lv{font:600 11px var(--mono);color:var(--sub)}
+  .g{margin:7px 0}
+  .g .glabel{display:flex;justify-content:space-between;font:600 11px var(--mono);margin-bottom:3px}
+  .g .glabel .v{color:var(--ink)}
+  .bar{height:11px;background:#0c0e15;border-radius:6px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:6px;transition:width .28s}
+  .hp .glabel{color:var(--hp)} .hp i{background:var(--hp)}
+  .ep .glabel{color:var(--ep)} .ep i{background:var(--ep)}
+  .pips{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap;align-items:center}
+  .pip{width:15px;height:15px;border-radius:3px;background:#0c0e15;border:1px solid var(--line)}
+  .pip.on{background:var(--en);border-color:var(--en);box-shadow:0 0 6px #5aa7e055}
+  .pips .etxt{font:700 12px var(--mono);color:var(--en);margin-left:6px}
+  .tele{margin-top:10px;font-size:12.5px;color:var(--warn);min-height:20px}
+  .tele.calm{color:var(--sub)}
+  .buffs{margin-top:8px;font:600 11px var(--mono);color:var(--gold);min-height:16px}
+  .enemy .who b{color:#f0b090}
+  /* 行動バー:主役=攻撃を塗り、他は控えめ(階層) */
+  .actions{background:var(--panel);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+  .actrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .act{position:relative;background:#0e1017;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:11px 16px;font:600 15px inherit;cursor:pointer;transition:.12s}
+  .act .c{font:700 11px var(--mono);color:var(--en);margin-left:7px}
+  .act:hover:not(:disabled){border-color:#59637f}
+  .act.primary{background:#2a2413;border-color:#5a4a1e;color:var(--gold)}
+  .act.primary:hover:not(:disabled){background:#37301a}
+  .act:disabled{opacity:.32;cursor:not-allowed}
+  .act .sub{position:absolute;left:0;top:calc(100% + 6px);background:#161a26;border:1px solid var(--line);border-radius:8px;padding:6px;display:none;z-index:5;min-width:210px}
+  .act.open .sub{display:block}
+  .subitem{display:flex;justify-content:space-between;gap:14px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13px}
+  .subitem:hover{background:#222838}
+  .subitem.dis{opacity:.35;cursor:not-allowed}
+  .subitem .sc{font:700 11px var(--mono);color:var(--en)}
+  .subitem small{color:var(--sub);display:block;font-weight:400}
+  .endbar{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .hint{color:var(--sub);font-size:12px}
+  .log{background:#0e1017;border-radius:10px;padding:12px 14px;height:190px;overflow:auto;font:13px/1.6 var(--mono);color:#c3c8d8}
+  .log .t{color:var(--gold)} .log .d{color:#f0a090} .log .e{color:var(--ep)} .log .s{color:var(--en)} .log .w{color:var(--warn)} .log .dim{color:var(--sub)}
+  .over{text-align:center;padding:16px;border-radius:10px;margin-bottom:14px;font-size:16px;font-weight:700}
+  .over.win{background:#16301a;color:#8fe0a0} .over.lose{background:#301619;color:#e89aa0}
+  /* 検証(バッチシム) */
+  .sim{background:var(--panel);border-radius:10px;padding:16px 18px;margin-top:22px}
+  .sim h2{font-size:14px;margin:0 0 4px} .sim p{color:var(--sub);font-size:12px;margin:0 0 12px}
+  .simout{font:12.5px/1.7 var(--mono);white-space:pre-wrap;color:#c3c8d8;background:#0e1017;border-radius:8px;padding:12px 14px;min-height:40px;margin-top:12px}
+  .simout .good{color:var(--hp)} .simout .bad{color:var(--warn)} .simout .k{color:var(--gold)}
+  .foot{color:var(--sub);font-size:11.5px;margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+  code{font-family:var(--mono);color:var(--gold);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>戦闘ロジック検証<span class="tag">RESOURCE BATTLE / PROTOTYPE</span></h1>
+  <p class="lead">
+    1手番＝<b>エネルギー(行動力)</b>の予算内で複数行動を組み立てる戦闘。<b>興奮(EP)が上がるほど最大エネルギーが減り</b>、100で絶頂敗北。
+    バフ・回復は<b>どうぐ(=金/EP)のみ</b>。設計 v2 の検証用サンドボックス(数値は仮)。
+  </p>
+
+  <div class="setup" id="setup">
+    <div class="fld"><label>敵</label><select id="cfgEnemy"></select></div>
+    <div class="fld"><label>強さ倍率(階/エリート想定)</label><select id="cfgMult">
+      <option value="1">×1.0(通常)</option><option value="1.44">×1.44(3階)</option>
+      <option value="1.6">×1.6(ボス雑魚)</option><option value="1.9">×1.9(5階)</option></select></div>
+    <div class="fld"><label>Lv</label><select id="cfgLv"><option>3</option><option selected>5</option><option>7</option><option>10</option></select></div>
+    <div class="fld"><label>武器</label><select id="cfgWeapon"></select></div>
+    <div class="fld"><label>防具</label><select id="cfgArmor"></select></div>
+    <div class="fld"><label>常時型淫具</label><select id="cfgPtoy"></select></div>
+    <div class="fld"><label>発動型淫具(どうぐ内)</label><select id="cfgAtoy"></select></div>
+    <div class="fld" style="justify-content:flex-end"><button class="btn go" id="startBtn">戦闘開始 / リセット</button></div>
+  </div>
+
+  <div id="overBox"></div>
+
+  <div class="arena">
+    <div class="card" id="pCard"></div>
+    <div class="card enemy" id="eCard"></div>
+  </div>
+
+  <div class="actions" id="actionBar"></div>
+
+  <div class="log" id="log"></div>
+
+  <div class="sim">
+    <h2>バランス検証(オート対戦)— 「殴り合い脱却」の数値証明</h2>
+    <p>同じ条件で <b>攻撃連打AI</b> と <b>賢いAI</b>(EP/防御/どうぐを管理)を各N戦。<b>賢い＞連打</b> なら、リソース管理に意味がある＝殴り合いを脱している。</p>
+    <div class="actrow">
+      <input id="simN" type="number" value="400" style="width:90px"> <span class="hint">戦</span>
+      <button class="btn go" id="simBtn">オート対戦を実行</button>
+      <span class="hint">※現在の敵/装備設定で回す</span>
+    </div>
+    <div class="simout" id="simOut">未実行。</div>
+  </div>
+
+  <div class="foot">
+    行動: 攻撃 / スキル(強撃・崩し・見切り) / 防御 / どうぐ(消耗品＋発動型淫具)。
+    エネルギー最大 = 基礎10 + 武具/防具補正 − ⌊EP/12⌋。発動型淫具=消耗なし・使用でEP上昇。淫気解放なし。
+    <br>数値は検証用の仮値です。確定はNシム後、Ren'Py <code>core.rpy</code> へ移植します。
+  </div>
+</div>
+
+<script>
+"use strict";
+// ─────────────────────────────────────────────────────────────────────────
+// データ(仮値)。Ren'Py data.rpy に相当。
+// ─────────────────────────────────────────────────────────────────────────
+const ENERGY_BASE = 10;
+const WEAPONS = {
+  dagger:{name:'短剣', atk:3,  energy:1,  note:'軽い・手数+1'},
+  old:   {name:'古びた剣', atk:0, energy:0, note:'—'},
+  iron:  {name:'鉄の剣', atk:8, energy:0,  note:'—'},
+  knight:{name:'騎士剣', atk:18, energy:-1, note:'重い・手数-1'},
+};
+const ARMORS = {
+  travel: {name:'旅装', def:0,  energy:0,  epres:0,    note:'—'},
+  light:  {name:'軽鎧', def:4,  energy:1,  epres:0,    note:'手数+1'},
+  leather:{name:'革鎧', def:7,  energy:0,  epres:0.15, note:'被EP-15%'},
+  plate:  {name:'胸甲', def:14, energy:-1, epres:0.25, note:'重い・被EP-25%'},
+};
+const PTOYS = { // 常時型:装備だけで効果(代償あり)
+  none:  {name:'なし'},
+  rotor: {name:'銀のローター', atkPct:0.15, epTick:4, note:'攻撃+15% / 毎ターンEP+4'},
+  pierce:{name:'感度のピアス', crit:0.15, epGain:0.30, note:'クリ+15% / 被EP+30%'},
+  pearl: {name:'アナルパール', physRed:0.15, epTick:6, note:'被物理-15% / 毎ターンEP+6'},
+};
+const ATOYS = { // 発動型:どうぐ内・消耗なし・使うとEP上昇して効果
+  none:    {name:'なし'},
+  vibrator:{name:'魔導バイブ', energy:2, epCost:22, effect:'atkbuff', pct:0.40, turns:2, note:'攻撃+40%(2T)。使用でEP+22'},
+  crest:   {name:'淫紋のピアス', energy:2, epCost:18, effect:'nextbig', pct:1.00, note:'次の一撃+100%。使用でEP+18'},
+};
+const ITEMS = { // 消耗品:金で買う。使用=エネルギー2+1個消費
+  potion:{name:'ポーション', energy:2, effect:'hp',  val:0.5, stock:3, note:'HP50%回復'},
+  holy:  {name:'聖水',       energy:2, effect:'ep',  val:-40, stock:2, note:'EP-40'},
+  atk:   {name:'力の薬',     energy:2, effect:'atkbuff', pct:0.30, turns:3, stock:1, note:'攻撃+30%(3T)'},
+};
+const SKILLS = {
+  strike:{name:'強撃', cost:5, mult:1.8, note:'高倍率の一撃'},
+  brk:   {name:'崩し', cost:3, note:'この手番の次の攻撃が防御貫通+確定クリ'},
+  parry: {name:'見切り', cost:4, note:'次の敵攻撃-50%+反撃'},
+};
+const ATTACK_COST = 3, GUARD_COST = 2;
+// ★HPは1手番=複数行動(攻撃3回等)を前提に大きめ=多ターン戦。EP系は絶頂の脅威、ボスは大技の脅威。
+const ENEMIES = {
+  bandit:  {name:'盗賊', hp:180, atk:12, def:2, epDmg:9,  phys:0.72, boss:false},
+  slime:   {name:'スライム', hp:300, atk:8,  def:7, epDmg:12, phys:0.30, boss:false},
+  tentacle:{name:'触手蔦', hp:210, atk:6,  def:3, epDmg:12, phys:0.16, boss:false},
+  orc:     {name:'オーク長(ボス)', hp:820, atk:24, def:7, epDmg:12, phys:0.72, boss:true},
+  succubus:{name:'堕神官(ボス)', hp:780, atk:14, def:8, epDmg:17, phys:0.28, boss:true},
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// モデル
+// ─────────────────────────────────────────────────────────────────────────
+let RNG = Math.random;
+function rint(a,b){return a+Math.floor(RNG()*(b-a+1));}
+function rf(a,b){return a+RNG()*(b-a);}
+
+function mkPlayer(cfg){
+  const lv=+cfg.lv, hpMax=40+lv*7;
+  const items={};
+  for(const k in ITEMS) items[k]=ITEMS[k].stock;
+  return {lv,hpMax,hp:hpMax,ep:0,baseAtk:8+lv*2,baseDef:3+lv,
+    weapon:cfg.weapon,armor:cfg.armor,ptoy:cfg.ptoy,atoy:cfg.atoy,
+    items, buffs:[], energy:0, guard:false, parry:false, breakNext:false, nextBig:0};
+}
+function mkEnemy(key,mult){
+  const b=ENEMIES[key]; const m=+mult;
+  const hp=Math.round(b.hp*m);
+  return {key,name:b.name+(m>=1.6?'(手強い)':''),hp,hpMax:hp,
+    atk:Math.round(b.atk*m),def:b.def,epDmg:Math.round(b.epDmg*m),phys:b.phys,boss:b.boss};
+}
+function pAtk(p){ let a=p.baseAtk+WEAPONS[p.weapon].atk;
+  if(PTOYS[p.ptoy].atkPct) a*=1+PTOYS[p.ptoy].atkPct;
+  p.buffs.forEach(bf=>{if(bf.type==='atk')a*=1+bf.pct;});
+  return Math.round(a);}
+function pDef(p){ return p.baseDef+ARMORS[p.armor].def; }
+function pCrit(p){ let c=0.06; if(PTOYS[p.ptoy].crit)c+=PTOYS[p.ptoy].crit; return c; }
+function eMax(p){ return Math.max(1, ENERGY_BASE + WEAPONS[p.weapon].energy + ARMORS[p.armor].energy - Math.floor(p.ep/12)); }
+function addEP(p,v){ p.ep=Math.max(0,Math.min(100,p.ep+v)); }
+
+// 敵テレグラフ(次の行動)
+function newTelegraph(st){
+  const e=st.enemy, p=st.player;
+  const sig = e.boss && st.turn%4===0;
+  let physR = Math.max(0.05, e.phys - 0.12*(p.ptoy!=='none'?1:0));
+  const isPhys = RNG()<physR;
+  st.tele = {type:isPhys?'phys':'lewd', sig};
+}
+function teleText(st){
+  const t=st.tele; if(!t) return '';
+  if(t.sig) return '★大技の予兆……身構えろ!';
+  return t.type==='phys' ? '次:斬りかかる構え(物理)' : '次:妖しく身をよじる(猥褻・EP上昇)';
+}
+
+// ── プレイヤー行動(1つ)。成功でtrue。log配列に追記 ──
+function canAct(st,kind,key){
+  const p=st.player;
+  if(kind==='attack') return p.energy>=ATTACK_COST;
+  if(kind==='guard')  return p.energy>=GUARD_COST;
+  if(kind==='skill')  return p.energy>=SKILLS[key].cost;
+  if(kind==='item')   return p.energy>=ITEMS[key].energy && p.items[key]>0;
+  if(kind==='atoy')   return p.energy>=ATOYS[key].energy && key!=='none';
+  return false;
+}
+function hitDamage(st,mult){
+  const p=st.player,e=st.enemy;
+  let ignoreDef=false, crit=RNG()<pCrit(p);
+  if(p.breakNext){ ignoreDef=true; crit=true; p.breakNext=false; }
+  let big=1; if(p.nextBig){ big=1+p.nextBig; p.nextBig=0; }
+  let base=pAtk(p)*mult*big;
+  let dmg=Math.max(1, base - (ignoreDef?0:e.def));
+  dmg=Math.round(dmg*rf(0.9,1.1));
+  if(crit) dmg=Math.round(dmg*1.5);
+  e.hp=Math.max(0,e.hp-dmg);
+  return {dmg,crit,ignoreDef};
+}
+function doAction(st,kind,key){
+  const p=st.player, e=st.enemy, L=st.log;
+  if(!canAct(st,kind,key)) return false;
+  if(kind==='attack'){ p.energy-=ATTACK_COST; const r=hitDamage(st,1.0);
+    L.push([(r.crit?'クリティカル! ':'')+'攻撃 → '+r.dmg+' ダメージ','d']); }
+  else if(kind==='guard'){ p.energy-=GUARD_COST; p.guard=true; L.push(['防御の構え(次の被弾/被EPを軽減)','s']); }
+  else if(kind==='skill'){ const s=SKILLS[key]; p.energy-=s.cost;
+    if(key==='strike'){ const r=hitDamage(st,s.mult); L.push(['【強撃】'+(r.crit?'クリ! ':'')+r.dmg+' の大ダメージ','d']); }
+    else if(key==='brk'){ p.breakNext=true; L.push(['【崩し】次の一撃が防御貫通+確定クリに','s']); }
+    else if(key==='parry'){ p.parry=true; L.push(['【見切り】次の敵攻撃を-50%+反撃','s']); } }
+  else if(kind==='item'){ const it=ITEMS[key]; p.energy-=it.energy; p.items[key]--;
+    if(it.effect==='hp'){ const h=Math.round(p.hpMax*it.val); p.hp=Math.min(p.hpMax,p.hp+h); L.push(['どうぐ「'+it.name+'」→ HP+'+h,'s']); }
+    else if(it.effect==='ep'){ addEP(p,it.val); L.push(['どうぐ「'+it.name+'」→ EP'+it.val,'e']); }
+    else if(it.effect==='atkbuff'){ p.buffs.push({type:'atk',pct:it.pct,turns:it.turns}); L.push(['どうぐ「'+it.name+'」→ 攻撃+'+Math.round(it.pct*100)+'%('+it.turns+'T)','s']); } }
+  else if(kind==='atoy'){ const t=ATOYS[key]; p.energy-=t.energy; addEP(p,t.epCost);
+    if(t.effect==='atkbuff'){ p.buffs.push({type:'atk',pct:t.pct,turns:t.turns}); L.push(['発動型淫具「'+t.name+'」→ 攻撃+'+Math.round(t.pct*100)+'%('+t.turns+'T)/EP+'+t.epCost+'','e']); }
+    else if(t.effect==='nextbig'){ p.nextBig=t.pct; L.push(['発動型淫具「'+t.name+'」→ 次の一撃+'+Math.round(t.pct*100)+'%/EP+'+t.epCost,'e']); } }
+  if(e.hp<=0){ st.over='win'; }
+  return true;
+}
+// ── 敵の手番 ──
+function enemyTurn(st){
+  const p=st.player,e=st.enemy,t=st.tele,L=st.log;
+  if(t.type==='phys'){
+    // 大技(signature)は防御を半分貫通=高DEFでも刺さる=見切り/防御のタイミングが重要に
+    let dmg=Math.max(1, Math.round((e.atk*(t.sig?1.6:1) - pDef(p)*(t.sig?0.4:1))*(1-(PTOYS[p.ptoy].physRed||0))));
+    if(p.guard) dmg=Math.round(dmg*(t.sig?0.75:0.5));
+    if(p.parry){ dmg=Math.round(dmg*0.5); const c=Math.round(pAtk(p)*(0.6+(t.sig?0.4:0))); e.hp=Math.max(0,e.hp-c); L.push(['見切って反撃! '+c+' を返した','s']); }
+    p.hp=Math.max(0,p.hp-dmg);
+    L.push([(t.sig?'【大技】':'')+e.name+'の攻撃 → '+dmg+' ダメージ','w']);
+  } else {
+    let g=e.epDmg*(t.sig?1.6:1);
+    if(PTOYS[p.ptoy].epGain) g*=1+PTOYS[p.ptoy].epGain;
+    if(ARMORS[p.armor].epres) g*=1-ARMORS[p.armor].epres;
+    if(p.guard) g*=(t.sig?0.75:0.5);
+    g=Math.round(g); addEP(p,g);
+    L.push([(t.sig?'【大技】':'')+e.name+'の猥褻な一撃 → EP+'+g,'e']);
+  }
+  if(PTOYS[p.ptoy].epTick){ addEP(p,PTOYS[p.ptoy].epTick); }
+  p.buffs=p.buffs.map(b=>({...b,turns:b.turns-1})).filter(b=>b.turns>0);
+  p.guard=false; p.parry=false; p.breakNext=false; p.nextBig=0;
+  st.turn++;
+  if(p.hp<=0) st.over='lose_hp';
+  else if(p.ep>=100) st.over='lose_ep';
+  else newTelegraph(st);
+}
+function startTurn(st){ st.player.energy=eMax(st.player); }
+
+// ─────────────────────────────────────────────────────────────────────────
+// AI(検証用)
+// ─────────────────────────────────────────────────────────────────────────
+function aiSpam(st){ // 攻撃連打のみ
+  if(canAct(st,'attack')) return ['attack',null];
+  return ['end',null];
+}
+function aiSmart(st){ // 「レース最速 + 大技だけ確実に捌く + 緊急どうぐ」= 連打に有害な手を足さず得な手だけ足す
+  const p=st.player,e=st.enemy,t=st.tele;
+  const hpr=p.hp/p.hpMax, ehr=e.hp/e.hpMax, defHi=e.def>=6;
+  // ① 大技(防御貫通)は"危ない時だけ"見切り/防御(安全なら無視してレース最速=無駄手を打たない)
+  if(t.sig && hpr<0.6){ if(canAct(st,'skill','parry')) return ['skill','parry']; if(canAct(st,'guard')) return ['guard',null]; }
+  // ② HP危険→ポーション / EP致命域でまだ敵が残る→聖水で延命(レースを繋ぐ)
+  if(hpr<0.3 && canAct(st,'item','potion')) return ['item','potion'];
+  if(p.ep>=86 && ehr>0.16 && canAct(st,'item','holy')) return ['item','holy'];
+  // ③ あとはレース最速(崩しは今の数値だと素の連撃に劣るのでAIは使わない=人間の対高DEF択として温存)
+  if(p.breakNext && canAct(st,'attack')) return ['attack',null];
+  if(canAct(st,'skill','strike') && ehr>0.3) return ['skill','strike'];
+  if(canAct(st,'attack')) return ['attack',null];
+  return ['end',null];
+}
+function runAuto(cfg, aiFn){
+  const st={player:mkPlayer(cfg),enemy:mkEnemy(cfg.enemy,cfg.mult),turn:1,over:null,log:[]};
+  newTelegraph(st);
+  let guard=0;
+  while(!st.over && guard<400){
+    guard++;
+    startTurn(st);
+    let acts=0;
+    while(!st.over && acts<20){
+      const [k,key]=aiFn(st);
+      if(k==='end'||!doAction(st,k,key)) break;
+      acts++;
+    }
+    if(st.over) break;
+    enemyTurn(st);
+  }
+  return st;
+}
+function simBatch(cfg,aiFn,n){
+  let win=0,turns=0,ephp={hp:0,ep:0};
+  for(let i=0;i<n;i++){ const st=runAuto(cfg,aiFn); if(st.over==='win'){win++;turns+=st.turn;} else if(st.over==='lose_ep')ephp.ep++; else ephp.hp++; }
+  return {win, rate:Math.round(win/n*100), avgT:win?(turns/win).toFixed(1):'-', epLoss:ephp.ep, hpLoss:ephp.hp, n};
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// UI
+// ─────────────────────────────────────────────────────────────────────────
+let ST=null;
+const $=id=>document.getElementById(id);
+function opt(sel,obj,cur){ sel.innerHTML=''; for(const k in obj){ const o=document.createElement('option'); o.value=k; o.textContent=obj[k].name+(obj[k].note&&obj[k].note!=='—'?' — '+obj[k].note:''); if(k===cur)o.selected=true; sel.appendChild(o);} }
+function fillSetup(){
+  opt($('cfgEnemy'),ENEMIES,'bandit'); opt($('cfgWeapon'),WEAPONS,'iron');
+  opt($('cfgArmor'),ARMORS,'leather'); opt($('cfgPtoy'),PTOYS,'none'); opt($('cfgAtoy'),ATOYS,'none');
+}
+function readCfg(){ return {enemy:$('cfgEnemy').value,mult:$('cfgMult').value,lv:$('cfgLv').value,
+  weapon:$('cfgWeapon').value,armor:$('cfgArmor').value,ptoy:$('cfgPtoy').value,atoy:$('cfgAtoy').value}; }
+
+function bar(cur,max){ return Math.max(0,Math.min(100,cur/max*100)); }
+function render(){
+  const st=ST; if(!st)return; const p=st.player,e=st.enemy;
+  // player card
+  $('pCard').innerHTML=`
+    <div class="who"><b>れいな</b><span class="lv">Lv.${p.lv}　ATK ${pAtk(p)} / DEF ${pDef(p)}</span></div>
+    <div class="g hp"><div class="glabel"><span>HP</span><span class="v">${p.hp}/${p.hpMax}</span></div><div class="bar"><i style="width:${bar(p.hp,p.hpMax)}%"></i></div></div>
+    <div class="g ep"><div class="glabel"><span>EP(興奮)</span><span class="v">${p.ep}/100</span></div><div class="bar"><i style="width:${bar(p.ep,100)}%"></i></div></div>
+    <div class="pips">${pipHTML(p)}<span class="etxt">${p.energy} / ${eMax(p)}　行動力</span></div>
+    <div class="buffs">${buffHTML(p)}</div>`;
+  const teleClass = st.tele&&st.tele.sig ? 'tele' : (st.tele&&st.tele.type==='lewd'?'tele':'tele calm');
+  $('eCard').innerHTML=`
+    <div class="who"><b>${e.name}</b><span class="lv">${e.boss?'BOSS':'敵'}</span></div>
+    <div class="g hp"><div class="glabel"><span>HP</span><span class="v">${e.hp}/${e.hpMax}</span></div><div class="bar"><i style="width:${bar(e.hp,e.hpMax)}%"></i></div></div>
+    <div class="${teleClass}">${teleText(st)}</div>`;
+  renderActions();
+  renderLog();
+  renderOver();
+}
+function pipHTML(p){ const mx=eMax(p); let s=''; for(let i=0;i<Math.max(mx,10);i++){ if(i>=mx){s+='';continue;} s+=`<span class="pip ${i<p.energy?'on':''}"></span>`;} return s; }
+function buffHTML(p){ const b=[]; p.buffs.forEach(x=>b.push('攻撃+'+Math.round(x.pct*100)+'%('+x.turns+'T)')); if(p.breakNext)b.push('崩し構え'); if(p.nextBig)b.push('次撃+'+Math.round(p.nextBig*100)+'%'); if(p.parry)b.push('見切り'); if(p.guard)b.push('防御'); return b.length?('◆ '+b.join(' / ')):''; }
+
+function renderActions(){
+  const st=ST, p=st.player, dead=!!st.over;
+  const en=(kind,key)=>dead||!canAct(st,kind,key);
+  const items=Object.keys(ITEMS).map(k=>`<div class="subitem ${en('item',k)?'dis':''}" data-k="item" data-x="${k}"><span>${ITEMS[k].name} <small>${ITEMS[k].note}・残${p.items[k]}</small></span><span class="sc">${ITEMS[k].energy}⚡</span></div>`).join('');
+  const atoyKey=p.atoy;
+  const atoy = atoyKey!=='none' ? `<div class="subitem ${en('atoy',atoyKey)?'dis':''}" data-k="atoy" data-x="${atoyKey}"><span>${ATOYS[atoyKey].name} <small>${ATOYS[atoyKey].note}・消耗なし</small></span><span class="sc">${ATOYS[atoyKey].energy}⚡</span></div>` : `<div class="subitem dis"><span><small>発動型淫具は未装備</small></span></div>`;
+  const skills=Object.keys(SKILLS).map(k=>`<div class="subitem ${en('skill',k)?'dis':''}" data-k="skill" data-x="${k}"><span>${SKILLS[k].name} <small>${SKILLS[k].note}</small></span><span class="sc">${SKILLS[k].cost}⚡</span></div>`).join('');
+  $('actionBar').innerHTML=`
+    <div class="actrow">
+      <button class="act primary" data-k="attack" ${en('attack')?'disabled':''}>攻撃<span class="c">${ATTACK_COST}⚡</span></button>
+      <button class="act" data-sub="skill" ${dead?'disabled':''}>スキル<span class="c">4-5⚡</span><div class="sub">${skills}</div></button>
+      <button class="act" data-k="guard" ${en('guard')?'disabled':''}>防御<span class="c">${GUARD_COST}⚡</span></button>
+      <button class="act" data-sub="item" ${dead?'disabled':''}>どうぐ<span class="c">2⚡</span><div class="sub">${items}<div style="border-top:1px solid var(--line);margin:5px 2px"></div>${atoy}</div></button>
+      <div class="endbar"><span class="hint">残り行動力の範囲で何回でも</span><button class="btn go" data-k="end" ${dead?'disabled':''}>ターン終了 ▶</button></div>
+    </div>`;
+}
+function renderLog(){ const el=$('log'); el.innerHTML=ST.log.slice(-80).map(([t,c])=>`<div><span class="${c||'dim'}">${t}</span></div>`).join(''); el.scrollTop=el.scrollHeight; }
+function renderOver(){
+  const b=$('overBox'); if(!ST.over){b.innerHTML='';return;}
+  if(ST.over==='win') b.innerHTML=`<div class="over win">▲ ${ST.enemy.name} を撃破!(${ST.turn}ターン)</div>`;
+  else if(ST.over==='lose_hp') b.innerHTML=`<div class="over lose">▼ 戦闘不能敗北(HP0)</div>`;
+  else b.innerHTML=`<div class="over lose">▼ 絶頂敗北(EP100)— 興奮に押し切られた</div>`;
+}
+
+// interactions
+function afterPlayerAction(){ if(ST.over){render();return;} render(); }
+$('actionBar').addEventListener('click',e=>{
+  const sub=e.target.closest('[data-sub]');
+  if(sub){ const wasOpen=sub.classList.contains('open'); document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); if(!wasOpen)sub.classList.add('open'); e.stopPropagation(); return; }
+  const item=e.target.closest('.subitem');
+  if(item && !item.classList.contains('dis')){ doAction(ST,item.dataset.k,item.dataset.x); document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); afterPlayerAction(); return; }
+  const b=e.target.closest('[data-k]'); if(!b)return;
+  const k=b.dataset.k;
+  if(k==='end'){ if(!ST.over){ enemyTurn(ST); render(); } return; }
+  if(k==='attack'||k==='guard'){ doAction(ST,k,null); afterPlayerAction(); }
+});
+document.addEventListener('click',e=>{ if(!e.target.closest('[data-sub]')&&!e.target.closest('.sub')) document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); });
+
+function start(){ const cfg=readCfg(); ST={player:mkPlayer(cfg),enemy:mkEnemy(cfg.enemy,cfg.mult),turn:1,over:null,log:[['— '+ENEMIES[cfg.enemy].name+' が現れた —','t']]}; newTelegraph(ST); startTurn(ST); render(); }
+$('startBtn').addEventListener('click',start);
+$('simBtn').addEventListener('click',()=>{
+  const cfg=readCfg(); const n=Math.max(10,Math.min(5000,+$('simN').value||400));
+  $('simOut').textContent='実行中…';
+  setTimeout(()=>{
+    const spam=simBatch(cfg,aiSpam,n), smart=simBatch(cfg,aiSmart,n);
+    const diff=smart.rate-spam.rate;
+    const verdict = diff>=8 ? `<span class="good">賢い＞連打(+${diff}pt)= リソース管理に意味あり=殴り合いを脱している ✓</span>`
+                  : diff<=-3 ? `<span class="bad">連打が優位(${diff}pt)= 退化。コスト/EP係数の再調整が必要</span>`
+                  : `<span class="k">ほぼ互角(${diff>=0?'+':''}${diff}pt)= 差が薄い。もう一段の設計調整余地</span>`;
+    $('simOut').innerHTML=
+`敵=${ENEMIES[cfg.enemy].name} ×${cfg.mult}  Lv${cfg.lv}  ${WEAPONS[cfg.weapon].name}/${ARMORS[cfg.armor].name}  常${PTOYS[cfg.ptoy].name}/発${ATOYS[cfg.atoy].name}   ${n}戦
+
+  攻撃連打AI : 勝率 <span class="k">${spam.rate}%</span>   平均${spam.avgT}T   敗北内訳 HP${spam.hpLoss}/絶頂${spam.epLoss}
+  賢いAI     : 勝率 <span class="k">${smart.rate}%</span>   平均${smart.avgT}T   敗北内訳 HP${smart.hpLoss}/絶頂${smart.epLoss}
+
+  → ${verdict}`;
+  },30);
+});
+
+fillSetup(); start();
+</script>
+</body>
+</html>
