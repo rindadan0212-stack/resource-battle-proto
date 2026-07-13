@@ -287,7 +287,7 @@ function newGame(){
     weapon:'old', armor:'travel', accessory:'none', ptoy:'none', atoy:'none',
     wUpg:{}, aUpg:{},
     items:{potion:0,strongpot:0,holy:0,calm:0,atk:0,guardpot:0,mana:0,cure:0,elixir:0}, toysOwned:[],
-    bossCleared:false, bossFailed:false, log:[['── 迷宮都市グランデル。借金 45,450G を返すため、剣を手に潜る。','t']],
+    bossDone:false, log:[['── 迷宮都市グランデル。借金 45,450G を返すため、剣を手に潜る。','t']],
     dun:null, bt:null, ctx:null, over:null };
   G.mp=mpMax();
   render();
@@ -606,12 +606,12 @@ function onBattleEnd(result,e){
       toHub(result==='ep'?'絶頂敗北。翌朝、目覚めれば体は回復している…':'戦闘不能。担がれ、翌朝には癒えていた…');
     }
   } else if(G.ctx==='boss'){
-    if(result==='win'){ G.bossCleared=true; G.bossFailed=false; const bonus=Math.round((BOSS_G[G.chapter-1]+QUEST_G[G.chapter-1])*INCOME_MULT); G.gold+=bonus;
-      log(e.name+' を打ち倒した! 討伐+依頼 +'+bonus+'G','g'); toHub('★'+e.name+'討伐! 返済窓口へ進める。'); }
-    else{ addInran(8); G.hp=Math.max(1,Math.round(hpMax()*0.6)); G.ep=0;
-      G.mp=mpMax(); G.bossFailed=true; // ★負けても進行可(討伐ボーナスは無し=不足/破産リスク上昇)。再挑戦してボーナスを狙うのも可
-      log('ボスに敗北。淫乱度+8。再挑戦するか、討伐を諦めて返済へ進める(ボーナス無し)','w');
-      toHub('ボスに敗れた…もう一度挑むか、討伐を諦めて返済へ進むか。'); }
+    G.bossDone=true; // ★任意ボスは1章1回のみ(やり直し無し)。勝敗に関わらず解決
+    if(result==='win'){ const bonus=Math.round((BOSS_G[G.chapter-1]+QUEST_G[G.chapter-1])*INCOME_MULT); G.gold+=bonus;
+      log(e.name+' を打ち倒した! 討伐ボーナス +'+bonus+'G','g'); toHub('★'+e.name+'討伐! 討伐ボーナス +'+bonus+'G。返済窓口はいつでも開いている。'); }
+    else{ addInran(8); G.hp=Math.max(1,Math.round(hpMax()*0.6)); G.ep=0; G.mp=mpMax();
+      log('討伐に失敗(淫乱度+8)。討伐ボーナスは無し・やり直しは無い。返済へ。','w');
+      toHub('ボスに敗れた…討伐ボーナスは得られなかった。あとは返済するのみ。'); }
   } else { toHub(result==='win'?'勝利':'敗北'); }
 }
 function dungeonAdvance(){ if(G.dun.floor>=MAX_FLOOR){ banked(); return; } G.dun.floor++; nextFloor(); }
@@ -631,11 +631,11 @@ function advanceDay(){ G.day++; G.hp=hpMax(); G.ep=0; G.mp=mpMax(); }
 function repaymentDay(){ const need=G.norma[G.chapter-1];
   if(G.gold>=need){ G.gold-=need; log('返済日: '+need+'G を納付。今月分クリア','g');
     if(G.chapter>=4){ endGame(); return; }
-    G.chapter++; G.day=1; G.bossCleared=false; G.bossFailed=false; toHub('第'+G.chapter+'章へ。'); }
+    G.chapter++; G.day=1; G.bossDone=false; toHub('第'+G.chapter+'章へ。'); }
   else{ const short=need-G.gold; G.gold=0;
     if(G.chapter>=4){ endGame(true); return; }
     G.norma[G.chapter] += Math.round(short*1.2); log('返済不足 '+short+'G。利子1.2倍で次章へ繰越','w');
-    G.chapter++; G.day=1; G.bossCleared=false; G.bossFailed=false; addInran(4); toHub('不足分を繰り越した(次章のノルマ増)。'); }
+    G.chapter++; G.day=1; G.bossDone=false; addInran(4); toHub('不足分を繰り越した(次章のノルマ増)。'); }
 }
 function endGame(bankrupt){ G.over = bankrupt?'bankrupt':(G.inran>=40?'fallen':'pure'); G.screen='result'; render(); }
 
@@ -703,13 +703,11 @@ function hubHTML(){ const repayDay=G.day>=DAYS_PER_CHAPTER+1;
   const spLabel=G.sp>0?`スキルツリー(SP ${G.sp})`:'スキルツリー';
   let m='';
   if(repayDay){
-    if(G.bossCleared){
-      m+=`<button class="mbtn primary" data-a="repay"><span><b>返済する(${G.norma[G.chapter-1]}G)</b><small>足りなければ利子で繰越(最終章は破産)</small></span></button>`;
-    }else{
-      m+=`<button class="mbtn boss" data-a="boss"><span><b>ボスに挑む${G.bossFailed?'(再挑戦)':''}</b><small>${ENEMIES[CH_BOSS[G.chapter]].name} を倒すと討伐ボーナス+返済窓口が開く</small></span><span class="tagd">戦闘</span></button>`;
-      // ★負けても進行できる: 討伐を諦めて所持金だけで返済へ(ボーナス無し=不足/破産の可能性)
-      if(G.bossFailed) m+=`<button class="mbtn" data-a="repay"><span><b>討伐を諦めて返済する(${G.norma[G.chapter-1]}G)</b><small>ボス討伐ボーナスは得られない。足りなければ利子で繰越(最終章は破産)</small></span></button>`;
-    }
+    // ★クリア条件=返済。返済は常時可能(ダンジョンもボスも必須ではない)
+    const canPay=G.gold>=G.norma[G.chapter-1];
+    m+=`<button class="mbtn primary" data-a="repay"><span><b>返済する(${G.norma[G.chapter-1]}G)</b><small>${canPay?'今月分を納付して次の章へ':'所持 '+G.gold+'G。足りなければ利子で繰越(最終章は破産)'}</small></span></button>`;
+    // ★ボス=任意の討伐ボーナス(1章1回・やり直し無し)。挑まなくても返済でクリアできる
+    if(!G.bossDone) m+=`<button class="mbtn boss" data-a="boss"><span><b>ボスに挑む(任意)</b><small>${ENEMIES[CH_BOSS[G.chapter]].name}。勝てば討伐ボーナス+G / 負ければ淫乱↑・ボーナス無し(やり直し無し)</small></span><span class="tagd">戦闘</span></button>`;
     m+=`<button class="mbtn" data-a="shop"><span><b>ショップ(モルガン商店)</b><small>装備・淫具・道具を買う(日は進まない)</small></span></button>`;
   }else{
     m+=`<button class="mbtn primary" data-a="dungeon"><span><b>◆ ダンジョンへ潜る</b><small>押し引きで稼ぐ。3・5階はボス雑魚(倒せば宝箱/負ければ淫乱↑)</small></span><span class="tagd">1日</span></button>`;
@@ -718,7 +716,7 @@ function hubHTML(){ const repayDay=G.day>=DAYS_PER_CHAPTER+1;
   }
   // ツリーボタン常設(日は進まない)
   m+=`<button class="mbtn ${G.sp>0?'primary':''}" data-a="tree"><span><b>${spLabel}</b><small>呼吸を整えて力を練る(日は進まない)${G.sp>0?' ← SP があります!':''}</small></span></button>`;
-  return `<div class="panel"><h2>拠点 — 第${G.chapter}章 DAY ${G.day}</h2><div class="desc">${repayDay?(G.bossCleared?'返済日。窓口へ納付する。':G.bossFailed?'返済日。ボスに敗れた——再挑戦するか、討伐を諦めて所持金だけで返済するか。':'返済日。ボスを倒せば討伐ボーナス+返済窓口。負けても返済へは進める。'):'返済日('+(DAYS_PER_CHAPTER+1)+'日目)までに '+G.norma[G.chapter-1]+'G を用意する。'}</div><div class="menu">${m}</div></div>
+  return `<div class="panel"><h2>拠点 — 第${G.chapter}章 DAY ${G.day}</h2><div class="desc">${repayDay?'返済日。'+G.norma[G.chapter-1]+'G を返せば次章へ(=クリア条件)。ボス討伐は任意の追加報酬。':'返済日('+(DAYS_PER_CHAPTER+1)+'日目)までに '+G.norma[G.chapter-1]+'G を用意する。'}</div><div class="menu">${m}</div></div>
     <div class="panel"><h2>ステータス</h2>${statTable()}</div>`;
 }
 function statTable(){ return `<table class="stat"><tr><td>HP <b>${G.hp}/${hpMax()}</b></td><td>ATK <b>${pAtk()}</b></td><td>DEF <b>${pDef()}</b></td><td>最大エネルギー <b>${eMax()}</b></td></tr>
