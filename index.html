@@ -230,25 +230,44 @@ const CH_BOSS={1:'orc',2:'flower',3:'succubus',4:'demon'};
 // ═══════════════════════ §2.4 P_BASE ═══════════════════════
 const P_BASE={hp:55, atk:10, def:5, crit:0.06};
 
-// ═══════════════════════ 装備 ═══════════════════════
+// ═══════════════════════ 装備(v3.3拡張=金の使い道を増やしビルド駆け引きを生む)═══════════════════════
 const WEAPONS={ old:{name:'古びた剣',atk:0,energy:0,cost:0}, dagger:{name:'短剣',atk:3,energy:1,cost:500,note:'軽い・手数+1'},
-  iron:{name:'鉄の剣',atk:8,energy:0,cost:800}, knight:{name:'騎士剣',atk:18,energy:-1,cost:2000,note:'重い・手数-1'} };
+  iron:{name:'鉄の剣',atk:8,energy:0,cost:800}, twin:{name:'双剣',atk:12,energy:1,cost:1400,note:'軽い・手数+1'},
+  knight:{name:'騎士剣',atk:18,energy:-1,cost:2000,note:'重い・手数-1'}, great:{name:'大剣',atk:27,energy:-2,cost:3000,note:'超重い・手数-2'} };
 const ARMORS={ travel:{name:'旅装',def:0,energy:0,epres:0,cost:0}, light:{name:'軽鎧',def:4,energy:1,epres:0,cost:600,note:'手数+1'},
-  leather:{name:'革鎧',def:7,energy:0,epres:0.15,cost:700,note:'被EP-15%'}, plate:{name:'胸甲',def:14,energy:-1,epres:0.25,cost:1800,note:'重い・被EP-25%'} };
+  leather:{name:'革鎧',def:7,energy:0,epres:0.15,cost:700,note:'被EP-15%'}, robe:{name:'妖術のローブ',def:6,energy:0,epres:0.32,cost:1400,note:'被EP-32%(EP対策特化)'},
+  plate:{name:'胸甲',def:14,energy:-1,epres:0.25,cost:1800,note:'重い・被EP-25%'}, heavy:{name:'重甲',def:21,energy:-2,epres:0.30,cost:3200,note:'超重い・被EP-30%・DEF極大'} };
+// ★アクセサリ枠(新設)。eff={atk,def,energy,crit,mp,epres,gold_pct} を派生ステに合算。ビルドの第3軸+金シンク。
+const ACCESSORIES={ none:{name:'なし',cost:0,eff:{}},
+  charm:  {name:'お守り',         cost:400, eff:{epres:0.15},        note:'被EP-15%'},
+  boots:  {name:'疾風の靴',       cost:800, eff:{energy:1},          note:'最大エネルギー+1'},
+  ring:   {name:'鉄石の指輪',     cost:900, eff:{def:5},             note:'DEF+5'},
+  belt:   {name:'力帯',           cost:1000,eff:{atk:6},             note:'ATK+6'},
+  earring:{name:'精神のイヤリング',cost:1300,eff:{mp:14,crit:0.06},   note:'最大MP+14・クリ+6%'},
+  coin:   {name:'幸運のコイン',   cost:1700,eff:{gold_pct:0.25},     note:'戦闘後の稼ぎ+25%(返済が楽に)'} };
+function accEff(key){ const a=ACCESSORIES[G.accessory]; return (a&&a.eff&&a.eff[key])||0; }
 const PTOYS={ none:{name:'なし',cost:0},
   rotor:{name:'銀のローター',cost:400,atkPct:0.15,epTick:4,inran:1,note:'攻撃+15%/毎T EP+4'},
   pierce:{name:'感度のピアス',cost:900,crit:0.15,epGain:0.30,inran:1,note:'クリ+15%/被EP+30%'},
   pearl:{name:'アナルパール',cost:1200,physRed:0.15,epTick:6,inran:1,note:'被物理-15%/毎T EP+6'},
+  pleasure:{name:'快楽の首飾り',cost:1500,crit:0.12,epTick:5,inran:1,note:'クリ+12%/毎T EP+5'},
+  imon:{name:'淫紋の刻印',cost:2400,gold_pct:0.30,epTick:5,inran:3,note:'戦闘後の稼ぎ+30%/毎T EP+5(堕落で稼ぐ)'},
   collar:{name:'呪いの首輪',cost:5000,atkPct:0.20,defPct:0.20,startEp:40,epTick:6,inran:3,note:'攻防+20%/開始EP40/外せない'} };
 const ATOYS={ none:{name:'なし',cost:0},
   vibrator:{name:'魔導バイブ',cost:1600,energy:2,epCost:22,effect:'atkbuff',pct:0.40,turns:2,inran:2,note:'攻撃+40%(2T)/使用EP+22'},
-  crest:{name:'淫紋のピアス',cost:2500,energy:2,epCost:18,effect:'nextbig',pct:1.0,inran:2,note:'次撃+100%/使用EP+18'} };
+  crest:{name:'淫紋のピアス',cost:2500,energy:2,epCost:18,effect:'nextbig',pct:1.0,inran:2,note:'次撃+100%/使用EP+18'},
+  scepter:{name:'淫魔の杖',cost:2600,energy:2,epCost:26,effect:'atkbuff',pct:0.60,turns:2,inran:2,note:'攻撃+60%(2T)/使用EP+26'} };
 
-// §2.8 ITEMS(マナ水追加)
+// §2.8 ITEMS(v3.3拡張=金で戦闘を楽にする層を厚く。使う=返済金が減る駆け引き)
 const ITEMS={ potion:{name:'ポーション',cost:80, energy:2,effect:'hp', val:0.5, note:'HP50%回復'},
+  strongpot:{name:'上薬',  cost:220,energy:2,effect:'hp', val:0.85,note:'HP85%回復'},
   holy:{name:'聖水',    cost:120,energy:2,effect:'ep', val:-40, note:'EP-40'},
+  calm:{name:'鎮静薬',  cost:260,energy:2,effect:'ep', val:-70, note:'EP-70'},
   atk: {name:'力の薬',  cost:150,energy:2,effect:'atkbuff',pct:0.30,turns:3,note:'攻撃+30%(3T)'},
-  mana:{name:'マナ水',  cost:140,energy:2,effect:'mp', val:15,  note:'MP+15'} };
+  guardpot:{name:'硬化薬',cost:150,energy:2,effect:'defbuff',pct:0.50,turns:3,note:'DEF+50%(3T)'},
+  mana:{name:'マナ水',  cost:140,energy:2,effect:'mp', val:15,  note:'MP+15'},
+  cure:{name:'浄化薬',  cost:180,energy:2,effect:'cure', note:'衰弱/拘束を解除・EP-15'},
+  elixir:{name:'霊薬',  cost:450,energy:2,effect:'elixir',note:'HP・MP全回復'} };
 
 // ═══════════════════════ §4 ゲーム状態 ═══════════════════════
 let G=null;
@@ -256,8 +275,8 @@ function newGame(){
   G={ screen:'hub', day:1, chapter:1, gold:800, norma:NORMA0.slice(),
     lv:1, exp:0, hp:P_BASE.hp, ep:0, mp:MP_BASE, inran:0,
     sp:SP_START, nodes:[],
-    weapon:'old', armor:'travel', ptoy:'none', atoy:'none',
-    items:{potion:0,holy:0,atk:0,mana:0}, toysOwned:[],
+    weapon:'old', armor:'travel', accessory:'none', ptoy:'none', atoy:'none',
+    items:{potion:0,strongpot:0,holy:0,calm:0,atk:0,guardpot:0,mana:0,cure:0,elixir:0}, toysOwned:[],
     bossCleared:false, log:[['── 迷宮都市グランデル。借金 45,450G を返すため、剣を手に潜る。','t']],
     dun:null, bt:null, ctx:null, over:null };
   G.mp=mpMax();
@@ -278,9 +297,9 @@ function hasNode(id){ return G.nodes.includes(id); }
 function skillKnown(k){ return G.nodes.includes(SKILLS[k].node); }
 
 function hpMax(){ return P_BASE.hp + treeSum('hp'); }
-function mpMax(){ return MP_BASE + treeSum('mp'); }
+function mpMax(){ return MP_BASE + treeSum('mp') + accEff('mp'); }
 function pAtk(){
-  let a = P_BASE.atk + treeSum('atk') + WEAPONS[G.weapon].atk;
+  let a = P_BASE.atk + treeSum('atk') + WEAPONS[G.weapon].atk + accEff('atk');
   const pt=PTOYS[G.ptoy]; if(pt.atkPct)a*=1+pt.atkPct;
   // 高揚: M9 + EP>=50
   if(hasNode('M9') && G.ep>=50) a*=1.20;
@@ -289,18 +308,19 @@ function pAtk(){
   return Math.round(a);
 }
 function pDef(){
-  let d = P_BASE.def + treeSum('def') + ARMORS[G.armor].def;
+  let d = P_BASE.def + treeSum('def') + ARMORS[G.armor].def + accEff('def');
   const pt=PTOYS[G.ptoy]; if(pt.defPct)d*=1+pt.defPct;
+  if(G.bt&&G.bt.buffs) G.bt.buffs.forEach(b=>{ if(b.type==='def')d*=1+b.pct; });   // 硬化薬
   return Math.round(d);
 }
 function pCrit(){
-  let c = P_BASE.crit + treeSum('crit');
+  let c = P_BASE.crit + treeSum('crit') + accEff('crit');
   if(PTOYS[G.ptoy].crit)c+=PTOYS[G.ptoy].crit;
   return c;
 }
 function treeGuardCut(){ return treeSum('guardCut'); }  // 鉄壁
 function treeEpRes(){    return treeSum('epres'); }      // 平静
-function eMax(){ return Math.max(1, ENERGY_BASE+WEAPONS[G.weapon].energy+ARMORS[G.armor].energy-Math.floor(G.ep/EP_ENERGY_DIV)); }
+function eMax(){ return Math.max(1, ENERGY_BASE+WEAPONS[G.weapon].energy+ARMORS[G.armor].energy+accEff('energy')-Math.floor(G.ep/EP_ENERGY_DIV)); }
 function addEP(v){ G.ep=Math.max(0,Math.min(100,G.ep+v)); }
 function addInran(v){ G.inran=Math.min(100,G.inran+v); }
 function inranStage(){ return G.inran>=90?'淫乱':G.inran>=60?'発情':G.inran>=30?'自覚':'清純'; }
@@ -462,6 +482,12 @@ function act(kind,key){ const bt=G.bt,e=bt.enemy; if(!canAct(kind,key))return fa
     } else if(it.effect==='mp'){
       G.mp=Math.min(mpMax(), G.mp+it.val);
       log('どうぐ「'+it.name+'」MP+'+it.val,'s');
+    } else if(it.effect==='elixir'){
+      G.hp=hpMax(); G.mp=mpMax(); log('どうぐ「'+it.name+'」HP・MP全回復!','s');
+    } else if(it.effect==='cure'){
+      bt.pdebuffs=[]; bt.boundNext=0; addEP(-15); log('どうぐ「'+it.name+'」衰弱/拘束を解除・EP-15','s');
+    } else if(it.effect==='defbuff'){
+      bt.buffs.push({type:'def',pct:it.pct,turns:it.turns}); log('どうぐ「'+it.name+'」防御+'+Math.round(it.pct*100)+'%('+it.turns+'T)','s');
     } else {
       bt.buffs.push({type:'atk',pct:it.pct,turns:it.turns});
       log('どうぐ「'+it.name+'」攻撃+'+Math.round(it.pct*100)+'%('+it.turns+'T)','s');
@@ -497,6 +523,7 @@ function _epHit(e, mult, sig){
   let g=e.ep*mult*(sig?1.6:1);
   if(PTOYS[G.ptoy].epGain) g*=1+PTOYS[G.ptoy].epGain;
   if(ARMORS[G.armor].epres) g*=1-ARMORS[G.armor].epres;
+  if(accEff('epres')) g*=1-accEff('epres');   // アクセサリ(お守り等)
   if(treeEpRes()>0) g*=1-treeEpRes();
   if(hasNode('M9')) g*=1.10;   // 高揚: 被EP+10%
   const gc=treeGuardCut(); if(G.bt.guard)g*=(sig?0.75-gc:0.5-gc);
@@ -541,7 +568,7 @@ function endBattle(result){ const e=G.bt.enemy;
 }
 
 // ═══════════════════════ 進行(ダンジョン押し引き) ═══════════════════════
-function goldMult(){ let m=1; if(PTOYS[G.ptoy]&&PTOYS[G.ptoy].gold_pct)m*=1+PTOYS[G.ptoy].gold_pct; return m; }
+function goldMult(){ let m=1; if(PTOYS[G.ptoy]&&PTOYS[G.ptoy].gold_pct)m*=1+PTOYS[G.ptoy].gold_pct; if(accEff('gold_pct'))m*=1+accEff('gold_pct'); return m; }
 function enterDungeon(){ G.hp=hpMax(); G.ep=0; G.mp=mpMax(); G.dun={floor:1,pool:0,streak:0}; nextFloor(); }
 function nextFloor(){ const d=G.dun, mobs=CH_MOBS[G.chapter];
   const elite=CHEST_FLOORS.includes(d.floor)||ELITE_FLOORS.includes(d.floor);
@@ -554,8 +581,8 @@ function onBattleEnd(result,e){
     if(result==='win'){
       d.streak++; const mult=STREAK_MULT[Math.min(d.streak,STREAK_MULT.length-1)];
       let reward;
-      if(e.goldReward){ reward=Math.round(rint(e.goldReward[0],e.goldReward[1])*INCOME_MULT); }
-      else{ reward=Math.round(rint(MOB_G[G.chapter-1][0],MOB_G[G.chapter-1][1])*mult*INCOME_MULT*(e.elite?ELITE_REWARD:1)); }
+      if(e.goldReward){ reward=Math.round(rint(e.goldReward[0],e.goldReward[1])*INCOME_MULT*goldMult()); }
+      else{ reward=Math.round(rint(MOB_G[G.chapter-1][0],MOB_G[G.chapter-1][1])*mult*INCOME_MULT*(e.elite?ELITE_REWARD:1)*goldMult()); }
       d.pool+=reward;
       let chest=0; if(CHEST_FLOORS.includes(d.floor)){ chest=Math.round(CHEST_G[G.chapter-1]*d.floor*INCOME_MULT); d.pool+=chest; }
       log(e.name+' 撃破! +'+reward+'G'+(chest?' +宝箱'+chest+'G':'')+'(連勝'+d.streak+') → プール '+d.pool+'G','g');
@@ -680,8 +707,8 @@ function hubHTML(){ const repayDay=G.day>=DAYS_PER_CHAPTER+1;
 }
 function statTable(){ return `<table class="stat"><tr><td>HP <b>${G.hp}/${hpMax()}</b></td><td>ATK <b>${pAtk()}</b></td><td>DEF <b>${pDef()}</b></td><td>最大エネルギー <b>${eMax()}</b></td></tr>
   <tr><td>MP <b>${G.mp}/${mpMax()}</b></td><td>SP未使用 <b>${G.sp}</b></td><td>習得ノード <b>${G.nodes.length}</b></td><td>クリ率 <b>${Math.round(pCrit()*100)}%</b></td></tr>
-  <tr><td>武器 <b>${WEAPONS[G.weapon].name}</b></td><td>防具 <b>${ARMORS[G.armor].name}</b></td><td>常時淫具 <b>${PTOYS[G.ptoy].name}</b></td><td>発動淫具 <b>${ATOYS[G.atoy].name}</b></td></tr>
-  <tr><td>ポーション <b>${G.items.potion}</b></td><td>聖水 <b>${G.items.holy}</b></td><td>力の薬 <b>${G.items.atk}</b></td><td>マナ水 <b>${G.items.mana}</b></td></tr></table>`; }
+  <tr><td>武器 <b>${WEAPONS[G.weapon].name}</b></td><td>防具 <b>${ARMORS[G.armor].name}</b></td><td>アクセ <b>${ACCESSORIES[G.accessory].name}</b></td><td>常時淫具 <b>${PTOYS[G.ptoy].name}</b></td></tr>
+  <tr><td>発動淫具 <b>${ATOYS[G.atoy].name}</b></td><td>ポーション <b>${G.items.potion}</b></td><td>聖水 <b>${G.items.holy}</b></td><td>マナ水 <b>${G.items.mana}</b></td></tr></table>`; }
 
 function dchoiceHTML(){ const d=G.dun;
   const spLabel=G.sp>0?`スキルツリー(SP ${G.sp})`:'スキルツリー';
@@ -724,11 +751,12 @@ function shopHTML(){
   const toyrow=(k,o,slot)=>{ const owned=G.toysOwned.includes(k); const equipped=(slot==='ptoy'?G.ptoy:G.atoy)===k;
     return `<div class="srow ${equipped?'owned':''}"><span class="n"><b>${o.name}</b><small>${o.note||''}</small></span>${equipped?'<span class="hint">装備中</span>':owned?`<button class="btn" data-equip="${slot}:${k}">装備</button>`:`<button class="btn" data-buy="${slot}:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button>`}</div>`; };
   const itemrow=(k,o)=>`<div class="srow"><span class="n"><b>${o.name}</b><small>${o.note}・所持${G.items[k]}</small></span><button class="btn" data-buy="item:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button></div>`;
-  return `<div class="panel"><h2>モルガン商店</h2><div class="desc">所持金 ${G.gold}G。マナ水でMPを金で補充できる。</div>
+  return `<div class="panel"><h2>モルガン商店</h2><div class="desc">所持金 ${G.gold}G。装備・淫具・消耗品に注ぎ込めば戦闘は楽になる——だが返済金は減る。何を買い、何を我慢するか。</div>
     <h2 style="font-size:12px;color:var(--sub);margin:6px 0 6px">武器</h2><div class="shop">${Object.keys(WEAPONS).filter(k=>k!=='old').map(k=>wrow(k,WEAPONS[k],G.weapon,'weapon')).join('')}</div>
     <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">防具</h2><div class="shop">${Object.keys(ARMORS).filter(k=>k!=='travel').map(k=>wrow(k,ARMORS[k],G.armor,'armor')).join('')}</div>
-    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・常時型</h2><div class="shop">${['rotor','pierce','pearl','collar'].map(k=>toyrow(k,PTOYS[k],'ptoy')).join('')}</div>
-    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・発動型</h2><div class="shop">${['vibrator','crest'].map(k=>toyrow(k,ATOYS[k],'atoy')).join('')}</div>
+    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">アクセサリ(第3の装備枠)</h2><div class="shop">${Object.keys(ACCESSORIES).filter(k=>k!=='none').map(k=>wrow(k,ACCESSORIES[k],G.accessory,'accessory')).join('')}</div>
+    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・常時型</h2><div class="shop">${['rotor','pierce','pearl','pleasure','imon','collar'].map(k=>toyrow(k,PTOYS[k],'ptoy')).join('')}</div>
+    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・発動型</h2><div class="shop">${['vibrator','crest','scepter'].map(k=>toyrow(k,ATOYS[k],'atoy')).join('')}</div>
     <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">消耗品</h2><div class="shop">${Object.keys(ITEMS).map(k=>itemrow(k,ITEMS[k])).join('')}</div>
     <div style="margin-top:14px"><button class="btn go" data-a="closeshop">拠点へ戻る</button></div></div>`;
 }
@@ -746,7 +774,7 @@ function pipHTML(){
   }
   return s;
 }
-function buffHTML(){ const bt=G.bt,b=[]; bt.buffs.forEach(x=>b.push('攻撃+'+Math.round(x.pct*100)+'%('+x.turns+'T)')); if(bt.breakNext)b.push('崩し'); if(bt.nextBig)b.push('次撃+'+Math.round(bt.nextBig*100)+'%'); if(bt.parry)b.push('見切り'); if(bt.guard)b.push('防御');
+function buffHTML(){ const bt=G.bt,b=[]; bt.buffs.forEach(x=>b.push((x.type==='def'?'防御+':'攻撃+')+Math.round(x.pct*100)+'%('+x.turns+'T)')); if(bt.breakNext)b.push('崩し'); if(bt.nextBig)b.push('次撃+'+Math.round(bt.nextBig*100)+'%'); if(bt.parry)b.push('見切り'); if(bt.guard)b.push('防御');
   const bad=[]; if(bt.pdebuffs)bt.pdebuffs.forEach(d=>bad.push('攻撃-'+Math.round(d.pct*100)+'%('+d.turns+'T)')); if(bt.boundNext)bad.push('拘束(次-'+bt.boundNext+'⚡)');
   let s=b.length?'◆ '+b.join(' / '):''; if(bad.length)s+=(s?'　':'')+'<span style="color:var(--warn)">⚠ '+bad.join(' / ')+'</span>'; return s; }
 function edebuffsHTML(){ const e=G.bt.enemy; if(!e.edebuffs||e.edebuffs.length===0)return ''; return '▼ '+e.edebuffs.map(d=>(d.stat==='atk'?'ATK':'DEF')+'-'+Math.round(d.pct*100)+'%('+d.turns+'T)').join(' / '); }
@@ -831,9 +859,9 @@ function handleAction(a){
   else if(a==='respec')doRespec();
 }
 function doBuy(spec){ const [slot,key]=spec.split(':');
-  const src = slot==='weapon'?WEAPONS[key]: slot==='armor'?ARMORS[key]: slot==='item'?ITEMS[key]: slot==='ptoy'?PTOYS[key]:ATOYS[key];
+  const src = slot==='weapon'?WEAPONS[key]: slot==='armor'?ARMORS[key]: slot==='accessory'?ACCESSORIES[key]: slot==='item'?ITEMS[key]: slot==='ptoy'?PTOYS[key]:ATOYS[key];
   if(G.gold<src.cost)return; G.gold-=src.cost;
-  if(slot==='weapon')G.weapon=key; else if(slot==='armor')G.armor=key;
+  if(slot==='weapon')G.weapon=key; else if(slot==='armor')G.armor=key; else if(slot==='accessory')G.accessory=key;
   else if(slot==='item')G.items[key]++;
   else{ G.toysOwned.push(key); if(slot==='ptoy'){G.ptoy=key;} else {G.atoy=key;} }
   log('購入: '+src.name+'(-'+src.cost+'G)','g'); render();
