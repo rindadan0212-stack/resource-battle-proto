@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#12141c; --panel:#1a1d29; --ink:#e7e9f0; --sub:#8b93ad;
-    --gold:#e8c86a; --hp:#57c25a; --ep:#e07bb0; --en:#5aa7e0; --warn:#e0695a; --debt:#e69a86; --lust:#e59ac8; --line:#2c3244;
+    --gold:#e8c86a; --hp:#57c25a; --ep:#e07bb0; --en:#5aa7e0; --mp:#9b8cf0; --warn:#e0695a; --debt:#e69a86; --lust:#e59ac8; --line:#2c3244;
     --mono:'DejaVu Sans Mono',ui-monospace,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
@@ -20,6 +20,7 @@
   .hud .s{display:flex;gap:6px;align-items:baseline}
   .hud .s label{color:var(--sub);font-size:10px;letter-spacing:.03em}
   .hud .gold{color:var(--gold)} .hud .debt{color:var(--debt)} .hud .lust{color:var(--lust)} .hud .day{color:var(--en)}
+  .hud .sp-badge{color:var(--gold)}
   .panel{background:var(--panel);border-radius:10px;padding:16px 18px;margin-bottom:14px}
   .panel h2{font-size:14px;margin:0 0 3px} .panel .desc{color:var(--sub);font-size:12px;margin:0 0 12px}
   .btn{background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;padding:8px 14px;font:600 13px inherit;cursor:pointer;transition:.12s}
@@ -42,12 +43,14 @@
   .g{margin:6px 0} .g .glabel{display:flex;justify-content:space-between;font:600 11px var(--mono);margin-bottom:3px}
   .bar{height:10px;background:#0c0e15;border-radius:6px;overflow:hidden}.bar>i{display:block;height:100%;border-radius:6px;transition:width .28s}
   .hp .glabel{color:var(--hp)} .hp i{background:var(--hp)} .ep .glabel{color:var(--ep)} .ep i{background:var(--ep)}
+  .mp .glabel{color:var(--mp)} .mp i{background:var(--mp)}
   .pips{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;align-items:center}
   .pip{width:14px;height:14px;border-radius:3px;background:#0c0e15;border:1px solid var(--line)}
   .pip.on{background:var(--en);border-color:var(--en);box-shadow:0 0 6px #5aa7e055}
   .pips .etxt{font:700 12px var(--mono);color:var(--en);margin-left:6px}
   .tele{margin-top:9px;font-size:12.5px;color:var(--warn);min-height:18px}.tele.calm{color:var(--sub)}
   .buffs{margin-top:7px;font:600 11px var(--mono);color:var(--gold);min-height:15px}
+  .edebuffs{margin-top:7px;font:600 11px var(--mono);color:#b9a8f5;min-height:15px}
   .enemy .who b{color:#f0b090}
   .actions{background:var(--panel);border-radius:10px;padding:13px 16px;margin-bottom:12px}
   .actrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
@@ -56,11 +59,11 @@
   .act:hover:not(:disabled){border-color:#59637f}
   .act.primary{background:#2a2413;border-color:#5a4a1e;color:var(--gold)}.act.primary:hover:not(:disabled){background:#37301a}
   .act:disabled{opacity:.32;cursor:not-allowed}
-  .act .sub{position:absolute;left:0;top:calc(100% + 6px);background:#161a26;border:1px solid var(--line);border-radius:8px;padding:6px;display:none;z-index:5;min-width:230px}
+  .act .sub{position:absolute;left:0;top:calc(100% + 6px);background:#161a26;border:1px solid var(--line);border-radius:8px;padding:6px;display:none;z-index:5;min-width:260px}
   .act.open .sub{display:block}
   .subitem{display:flex;justify-content:space-between;gap:14px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13px}
   .subitem:hover:not(.dis){background:#222838} .subitem.dis{opacity:.35;cursor:not-allowed}
-  .subitem .sc{font:700 11px var(--mono);color:var(--en)} .subitem small{color:var(--sub);display:block;font-weight:400}
+  .subitem .sc{font:700 11px var(--mono);color:var(--en)} .subitem .scm{font:700 11px var(--mono);color:var(--mp)} .subitem small{color:var(--sub);display:block;font-weight:400}
   .endbar{margin-left:auto;display:flex;gap:10px;align-items:center}
   .hint{color:var(--sub);font-size:12px}
   .log{background:#0e1017;border-radius:10px;padding:11px 14px;height:150px;overflow:auto;font:12.5px/1.55 var(--mono);color:#c3c8d8}
@@ -73,6 +76,15 @@
   .srow .n b{font-size:13px} .srow .n small{color:var(--sub);display:block;font-size:11px}
   .srow.owned{opacity:.5} .srow .price{font:700 12px var(--mono);color:var(--gold)}
   table.stat{font:12px var(--mono);border-collapse:collapse} table.stat td{padding:2px 12px 2px 0;color:var(--sub)} table.stat td b{color:var(--ink)}
+  /* ツリー画面 */
+  .tree-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+  .tree-col h3{font-size:12px;color:var(--sub);margin:0 0 8px;text-align:center;font:600 12px var(--mono)}
+  .node{background:#0e1017;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;transition:.12s;text-align:left;color:var(--ink);font:inherit;width:100%;margin-bottom:6px}
+  .node:hover:not(.locked){border-color:#59637f;background:#141824}
+  .node.taken{border-color:var(--gold)}
+  .node.locked{opacity:.35;cursor:not-allowed}
+  .node b{font-size:13px;display:block} .node small{color:var(--sub);font-size:11px;font-weight:400}
+  .node .node-cost{font:700 11px var(--mono);color:var(--gold);float:right}
   .verify{background:var(--panel);border-radius:10px;padding:14px 16px;margin-top:20px}
   .verify summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--sub)}
   .simout{font:12px/1.6 var(--mono);white-space:pre-wrap;color:#c3c8d8;background:#0e1017;border-radius:8px;padding:11px 13px;margin-top:10px;min-height:30px}
@@ -83,26 +95,38 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>借金返済ダンジョンRPG<span class="tag">進行＋リソース制戦闘 / PROTOTYPE</span></h1>
+  <h1>借金返済ダンジョンRPG<span class="tag">進行＋リソース制戦闘 / PROTOTYPE v3</span></h1>
   <div class="hud" id="hud"></div>
   <div id="banner"></div>
   <div id="app"></div>
   <div class="log" id="log"></div>
 
   <details class="verify">
-    <summary>▷ 戦闘バランス検証(オート対戦・攻撃連打AI vs 賢いAI)</summary>
+    <summary>▷ 戦闘バランス検証(オート対戦 v3 / 単戦 + run通し)</summary>
     <div style="margin-top:10px" class="actrow">
-      <span class="hint">現在の装備で</span>
+      <span class="hint">敵:</span>
       <select id="vEnemy" style="background:#0e1017;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select>
+      <span class="hint">N:</span>
       <input id="vN" type="number" value="500" style="width:80px;background:#0e1017;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px">
+      <span class="hint">ビルド:</span>
+      <select id="vBuild" style="background:#0e1017;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px">
+        <option value="P1">P1(Lv2/古剣)</option>
+        <option value="P2" selected>P2(Lv5/鉄剣)</option>
+        <option value="P3">P3(Lv8/騎士剣)</option>
+        <option value="P4">P4(Lv11/騎士剣/胸甲)</option>
+        <option value="BUILD_SWORD">剣ビルド(Lv8)</option>
+        <option value="BUILD_GUARD">体ビルド(Lv8)</option>
+        <option value="BUILD_MIND">心ビルド(Lv8)</option>
+      </select>
+      <label style="color:var(--sub);font-size:12px"><input type="checkbox" id="vRun"> run(6階通し)</label>
       <button class="btn go" id="vBtn">実行</button>
     </div>
-    <div class="simout" id="simOut">未実行。EPレース/大技の見切りで「賢い＞連打」なら殴り合いを脱している。</div>
+    <div class="simout" id="simOut">未実行。v3: MP枯渇・スキルツリー・デバフ系AIを検証。</div>
   </details>
 
   <div class="foot">
-    行動: 攻撃 / スキル(強撃・崩し・見切り) / 防御(1ターン1回) / どうぐ(消耗品＋発動型淫具)。エネルギー最大=基礎10+武具防具−⌊EP/12⌋。
-    数値は検証用の仮値。<code>新戦闘＋既存経済(押し引き/日数/返済/章)</code> を1本で試すプロト。
+    行動: 攻撃(3⚡) / スキル=MP消費・ツリーで習得(強撃/崩し/見切り/集中/威圧/弱点看破/深呼吸) / 防御(2⚡・1ターン1回) / どうぐ(回復・バフ・マナ水)。
+    MP=run持ち越しの枯渇資源(戦闘開始時+3のみ回復)。<code>スキルツリー(3系統26ノード)でビルドを選ぶ</code>。
     <button class="btn" style="margin-left:10px;padding:5px 12px" id="newBtn">最初からやり直す</button>
   </div>
 </div>
@@ -112,16 +136,98 @@
 const $=id=>document.getElementById(id);
 let RNG=Math.random; const rint=(a,b)=>a+Math.floor(RNG()*(b-a+1)); const rf=(a,b)=>a+RNG()*(b-a);
 
-// ═══════════════════════ データ(経済=検証済み値 / 戦闘=多行動前提の大HP) ═══════════════════════
+// ═══════════════════════ §2.1 資源定数 ═══════════════════════
 const ENERGY_BASE=10, ATTACK_COST=3, GUARD_COST=2;
+const EP_ENERGY_DIV=12;
+const MP_BASE=20;
+const MP_BATTLE_REGEN=3;
+const SP_PER_LEVEL=2;
+const SP_START=3;
+const RESPEC_COST=500;
+
+// ═══════════════════════ §2.2 SKILLS(7種・ツリー解放) ═══════════════════════
+const SKILLS={
+  strike:{name:'強撃',    energy:5, mp:6, kind:'attack', mult:2.0,               node:'S2', note:'2.0倍の一撃'},
+  crush: {name:'崩し',    energy:3, mp:5, kind:'setup',                          node:'S5', note:'次の攻撃=防御貫通+確定クリ'},
+  parry: {name:'見切り',  energy:4, mp:6, kind:'stance',                         node:'G7', note:'次の敵攻撃-50%+反撃'},
+  focus: {name:'集中',    energy:2, mp:4, kind:'buff',   pct:0.20, turns:3,      node:'M2', note:'自分の攻撃+20%(3T)'},
+  menace:{name:'威圧',    energy:2, mp:5, kind:'debuff', stat:'atk', pct:0.25, turns:3, node:'M4', note:'敵の攻撃-25%(3T)'},
+  expose:{name:'弱点看破',energy:2, mp:5, kind:'debuff', stat:'def', pct:0.50, turns:3, node:'M5', note:'敵の防御-50%(3T)'},
+  breath:{name:'深呼吸',  energy:2, mp:5, kind:'ep',     val:-18,                node:'M6', note:'EP-18'},
+};
+
+// ═══════════════════════ §2.3 TREE(26ノード) ═══════════════════════
+const TREE={
+  // 剣の道(火力) 14SP
+  S1:{name:'腕力 I',    br:'sword', tier:1, cost:1, req:[],          eff:{atk:4},  note:'ATK+4'},
+  S2:{name:'技:強撃',   br:'sword', tier:2, cost:2, req:['S1'],      eff:{skill:'strike'}, note:'スキル「強撃」を習得'},
+  S3:{name:'腕力 II',   br:'sword', tier:2, cost:1, req:['S1'],      eff:{atk:6},  note:'ATK+6'},
+  S4:{name:'会心',      br:'sword', tier:3, cost:1, req:['S3'],      eff:{crit:0.06}, note:'クリティカル率+6%'},
+  S5:{name:'技:崩し',   br:'sword', tier:3, cost:2, req:['S2'],      eff:{skill:'crush'}, note:'スキル「崩し」を習得'},
+  S6:{name:'腕力 III',  br:'sword', tier:3, cost:2, req:['S3'],      eff:{atk:8},  note:'ATK+8'},
+  S7:{name:'初撃の冴え',br:'sword', tier:4, cost:2, req:['S6'],      eff:{firstStrike:0.30}, note:'毎ターン最初の「攻撃」+30%'},
+  S8:{name:'処刑人',    br:'sword', tier:5, cost:3, req:['S5','S7'], reqMode:'any', eff:{execute:0.25}, note:'敵HP30%未満に与ダメ+25%'},
+  // 体の道(生存) 15SP
+  G1:{name:'体力 I',    br:'guard', tier:1, cost:1, req:[],          eff:{hp:12},  note:'HP+12'},
+  G2:{name:'守り I',    br:'guard', tier:2, cost:1, req:['G1'],      eff:{def:3},  note:'DEF+3'},
+  G3:{name:'体力 II',   br:'guard', tier:2, cost:1, req:['G1'],      eff:{hp:14},  note:'HP+14'},
+  G4:{name:'鉄壁',      br:'guard', tier:3, cost:2, req:['G2'],      eff:{guardCut:0.15}, note:'防御の軽減 50%→65%(大技25%→40%)'},
+  G5:{name:'守り II',   br:'guard', tier:3, cost:1, req:['G2'],      eff:{def:4},  note:'DEF+4'},
+  G6:{name:'体力 III',  br:'guard', tier:3, cost:2, req:['G3'],      eff:{hp:18},  note:'HP+18'},
+  G7:{name:'技:見切り', br:'guard', tier:4, cost:2, req:['G4'],      eff:{skill:'parry'}, note:'スキル「見切り」を習得'},
+  G8:{name:'平静',      br:'guard', tier:4, cost:2, req:['G5'],      eff:{epres:0.20}, note:'被EP-20%(防具と乗算)'},
+  G9:{name:'不屈',      br:'guard', tier:5, cost:3, req:['G6'],      eff:{undying:true}, note:'1戦闘1回、致死ダメージをHP1で耐える'},
+  // 心の道(MP・バフ/デバフ) 17SP
+  M1:{name:'気力 I',    br:'mind', tier:1, cost:1, req:[],           eff:{mp:8},   note:'最大MP+8'},
+  M2:{name:'技:集中',   br:'mind', tier:2, cost:2, req:['M1'],       eff:{skill:'focus'}, note:'スキル「集中」を習得'},
+  M3:{name:'気力 II',   br:'mind', tier:2, cost:1, req:['M1'],       eff:{mp:10},  note:'最大MP+10'},
+  M4:{name:'技:威圧',   br:'mind', tier:3, cost:2, req:['M2'],       eff:{skill:'menace'}, note:'スキル「威圧」を習得'},
+  M5:{name:'技:弱点看破',br:'mind', tier:3, cost:2, req:['M2'],      eff:{skill:'expose'}, note:'スキル「弱点看破」を習得'},
+  M6:{name:'技:深呼吸', br:'mind', tier:3, cost:2, req:['M3'],       eff:{skill:'breath'}, note:'スキル「深呼吸」を習得'},
+  M7:{name:'気力 III',  br:'mind', tier:4, cost:2, req:['M3'],       eff:{mp:12},  note:'最大MP+12'},
+  M8:{name:'静心',      br:'mind', tier:4, cost:2, req:['M7'],       eff:{mpRegen:6}, note:'戦闘開始時MP回復 +6(基礎3→9)'},
+  M9:{name:'高揚',      br:'mind', tier:5, cost:3, req:['M4','M5','M6'], reqMode:'any', eff:{arousal:{ep:50,atk:0.20,epGainUp:0.10}}, note:'EP50以上でATK+20%・ただし被EP+10%'},
+};
+
+// §2.7 汎用振り順
+const GENERIC_BUILD_ORDER=['S1','G1','S2','M1','G3','S3','M3','M6','G2','S6','G5','G6','S4','M2','M5','G4','G8','M7','G7'];
+
+// ═══════════════════════ 経済・進行定数(v2据え置き) ═══════════════════════
 const NORMA0=[4500,7800,12450,20700], DAYS_PER_CHAPTER=6, INCOME_MULT=0.73;
 const MOB_G=[[130,195],[225,335],[365,535],[645,945]], CHEST_G=[95,140,195,280], BOSS_G=[860,1600,2570,3750], QUEST_G=[430,535,855,2250];
 const STREAK_MULT=[1,1,1.15,1.35,1.6,1.9,2.2,2.6], CHEST_FLOORS=[3,5], MAX_FLOOR=6, FLOOR_SCALE=0.22;
 const ELITE_FLOORS=[3,5], ELITE_HP=1.6, ELITE_ATK=1.2, ELITE_EP=1.0, ELITE_REWARD=1.5;
-const CH_MULT=[1.0,1.3,1.55,1.8];
 const EXP_TABLE=[0,20,50,90,140,200,270,350,440,540,650,780,920,1080,1260]; const LV_MAX=EXP_TABLE.length;
-const MORGAN_WORK=[[0,700,4],[25,1200,5],[50,2000,6],[75,3200,8]]; // 最低淫乱,報酬,淫乱+
+const MORGAN_WORK=[[0,700,4],[25,1200,5],[50,2000,6],[75,3200,8]];
 
+// ═══════════════════════ §2.5 敵(全再調整値)+章倍率4本立て ═══════════════════════
+const CH_MULT =[1.0, 1.3,  1.55, 1.8 ];
+const ATK_MULT=[1.0, 1.35, 1.7,  2.1 ];
+const EP_MULT =[1.0, 1.25, 1.5,  1.75];
+const DEF_MULT=[1.0, 1.15, 1.3,  1.45];
+
+// ★v3.1 バランス調整(2026-07-13 Opusのオート対戦検証で確定)。設計§2.5の【仮】値はEP/floor/章倍率の重畳で
+//   エリート・EPボスが絶頂の壁、魔人がHPの壁だった。ep一律×0.60(round)、succubus/大触手/魔人のHP・魔人atkを下方修正。
+//   実測: 雑魚2-3T / エリート大触手5F 60%勝(gap+56) / 堕神官98%13T / 魔人100%13T(gap+35)。設計の±20%を超える調整あり(§2.6手順に沿う)。
+const ENEMIES={
+  bandit:      {name:'盗賊',      hp:100, atk:12, def:2,  ep:5,  phys:0.72, exp:10},
+  brigand:     {name:'追い剥ぎ',  hp:115, atk:13, def:3,  ep:6,  phys:0.68, exp:11},
+  slime:       {name:'スライム',  hp:105, atk:8,  def:6,  ep:7,  phys:0.30, exp:10},
+  gold_slime:  {name:'金スライム',hp:150, atk:0,  def:12, ep:0,  phys:0,    exp:30, noAttack:true, fleeTurns:6, goldReward:[500,800]},
+  tentacle:    {name:'触手蔦',    hp:150, atk:6,  def:3,  ep:8,  phys:0.16, exp:12},
+  tentacle_big:{name:'大触手',    hp:155, atk:8,  def:4,  ep:9,  phys:0.15, exp:15},
+  orc:         {name:'オーク長',  hp:480, atk:24, def:7,  ep:7,  phys:0.72, exp:60,  boss:true},
+  flower:      {name:'食虫花の主',hp:480, atk:16, def:8,  ep:10, phys:0.35, exp:90,  boss:true},
+  succubus:    {name:'堕神官',    hp:410, atk:14, def:8,  ep:10, phys:0.28, exp:130, boss:true, charm:0.15},
+  demon:       {name:'迷宮の魔人',hp:290, atk:16, def:11, ep:9,  phys:0.58, exp:200, boss:true},
+};
+const CH_MOBS={1:['bandit','brigand','slime','gold_slime'],2:['tentacle','tentacle_big'],3:['bandit','brigand'],4:['slime','gold_slime','tentacle','tentacle_big']};
+const CH_BOSS={1:'orc',2:'flower',3:'succubus',4:'demon'};
+
+// ═══════════════════════ §2.4 P_BASE ═══════════════════════
+const P_BASE={hp:55, atk:10, def:5, crit:0.06};
+
+// ═══════════════════════ 装備 ═══════════════════════
 const WEAPONS={ old:{name:'古びた剣',atk:0,energy:0,cost:0}, dagger:{name:'短剣',atk:3,energy:1,cost:500,note:'軽い・手数+1'},
   iron:{name:'鉄の剣',atk:8,energy:0,cost:800}, knight:{name:'騎士剣',atk:18,energy:-1,cost:2000,note:'重い・手数-1'} };
 const ARMORS={ travel:{name:'旅装',def:0,energy:0,epres:0,cost:0}, light:{name:'軽鎧',def:4,energy:1,epres:0,cost:600,note:'手数+1'},
@@ -134,131 +240,297 @@ const PTOYS={ none:{name:'なし',cost:0},
 const ATOYS={ none:{name:'なし',cost:0},
   vibrator:{name:'魔導バイブ',cost:1600,energy:2,epCost:22,effect:'atkbuff',pct:0.40,turns:2,inran:2,note:'攻撃+40%(2T)/使用EP+22'},
   crest:{name:'淫紋のピアス',cost:2500,energy:2,epCost:18,effect:'nextbig',pct:1.0,inran:2,note:'次撃+100%/使用EP+18'} };
-const ITEMS={ potion:{name:'ポーション',cost:80,energy:2,effect:'hp',val:0.5,note:'HP50%回復'},
-  holy:{name:'聖水',cost:120,energy:2,effect:'ep',val:-40,note:'EP-40'},
-  atk:{name:'力の薬',cost:150,energy:2,effect:'atkbuff',pct:0.30,turns:3,note:'攻撃+30%(3T)'} };
-const SKILLS={ strike:{name:'強撃',cost:5,mult:1.8,note:'高倍率の一撃'}, brk:{name:'崩し',cost:3,note:'次の攻撃が防御貫通+確定クリ'}, parry:{name:'見切り',cost:4,note:'次の敵攻撃-50%+反撃'} };
-const ENEMIES={
-  bandit:{name:'盗賊',hp:180,atk:12,def:2,ep:9,phys:0.72,exp:10},
-  brigand:{name:'追い剥ぎ',hp:200,atk:13,def:3,ep:10,phys:0.68,exp:11},
-  slime:{name:'スライム',hp:300,atk:8,def:7,ep:12,phys:0.30,exp:10},
-  gold_slime:{name:'金スライム',hp:430,atk:0,def:12,ep:0,phys:0,exp:30,noAttack:true,fleeTurns:8,goldReward:[500,800]},
-  tentacle:{name:'触手蔦',hp:210,atk:6,def:3,ep:12,phys:0.16,exp:12},
-  tentacle_big:{name:'大触手',hp:270,atk:8,def:4,ep:15,phys:0.15,exp:15},
-  orc:{name:'オーク長',hp:820,atk:24,def:7,ep:12,phys:0.72,exp:60,boss:true},
-  flower:{name:'食虫花の主',hp:800,atk:16,def:8,ep:16,phys:0.35,exp:90,boss:true},
-  succubus:{name:'堕神官',hp:780,atk:14,def:8,ep:17,phys:0.28,exp:130,boss:true,charm:0.15},
-  demon:{name:'迷宮の魔人',hp:1050,atk:28,def:11,ep:15,phys:0.58,exp:200,boss:true} };
-const CH_MOBS={1:['bandit','brigand','slime','gold_slime'],2:['tentacle','tentacle_big'],3:['bandit','brigand'],4:['slime','gold_slime','tentacle','tentacle_big']};
-const CH_BOSS={1:'orc',2:'flower',3:'succubus',4:'demon'};
 
-// ═══════════════════════ ゲーム状態 ═══════════════════════
+// §2.8 ITEMS(マナ水追加)
+const ITEMS={ potion:{name:'ポーション',cost:80, energy:2,effect:'hp', val:0.5, note:'HP50%回復'},
+  holy:{name:'聖水',    cost:120,energy:2,effect:'ep', val:-40, note:'EP-40'},
+  atk: {name:'力の薬',  cost:150,energy:2,effect:'atkbuff',pct:0.30,turns:3,note:'攻撃+30%(3T)'},
+  mana:{name:'マナ水',  cost:140,energy:2,effect:'mp', val:15,  note:'MP+15'} };
+
+// ═══════════════════════ §4 ゲーム状態 ═══════════════════════
 let G=null;
 function newGame(){
   G={ screen:'hub', day:1, chapter:1, gold:800, norma:NORMA0.slice(),
-    lv:1, exp:0, hp:47, ep:0, inran:0,
+    lv:1, exp:0, hp:P_BASE.hp, ep:0, mp:MP_BASE, inran:0,
+    sp:SP_START, nodes:[],
     weapon:'old', armor:'travel', ptoy:'none', atoy:'none',
-    items:{potion:0,holy:0,atk:0}, toysOwned:[],
+    items:{potion:0,holy:0,atk:0,mana:0}, toysOwned:[],
     bossCleared:false, log:[['── 迷宮都市グランデル。借金 45,450G を返すため、剣を手に潜る。','t']],
     dun:null, bt:null, ctx:null, over:null };
+  G.mp=mpMax();
   render();
 }
-function hpMax(){ return 40+G.lv*7; }
-function pAtk(){ let a=8+G.lv*2+WEAPONS[G.weapon].atk;
+
+// ═══════════════════════ §4 ツリー派生ステータス ═══════════════════════
+function treeSum(key){
+  let v=0;
+  G.nodes.forEach(id=>{
+    const n=TREE[id]; if(!n||!n.eff)return;
+    if(key==='skill')return; // スキルは別処理
+    if(n.eff[key]!==undefined) v+=n.eff[key];
+  });
+  return v;
+}
+function hasNode(id){ return G.nodes.includes(id); }
+function skillKnown(k){ return G.nodes.includes(SKILLS[k].node); }
+
+function hpMax(){ return P_BASE.hp + treeSum('hp'); }
+function mpMax(){ return MP_BASE + treeSum('mp'); }
+function pAtk(){
+  let a = P_BASE.atk + treeSum('atk') + WEAPONS[G.weapon].atk;
   const pt=PTOYS[G.ptoy]; if(pt.atkPct)a*=1+pt.atkPct;
-  if(G.bt&&G.bt.buffs) G.bt.buffs.forEach(b=>{if(b.type==='atk')a*=1+b.pct;});
-  return Math.round(a); }
-function pDef(){ let d=3+G.lv+ARMORS[G.armor].def; const pt=PTOYS[G.ptoy]; if(pt.defPct)d*=1+pt.defPct; return Math.round(d); }
-function pCrit(){ let c=0.06; if(PTOYS[G.ptoy].crit)c+=PTOYS[G.ptoy].crit; return c; }
-function eMax(){ return Math.max(1, ENERGY_BASE+WEAPONS[G.weapon].energy+ARMORS[G.armor].energy-Math.floor(G.ep/12)); }
+  // 高揚: M9 + EP>=50
+  if(hasNode('M9') && G.ep>=50) a*=1.20;
+  if(G.bt&&G.bt.buffs) G.bt.buffs.forEach(b=>{ if(b.type==='atk')a*=1+b.pct; });
+  return Math.round(a);
+}
+function pDef(){
+  let d = P_BASE.def + treeSum('def') + ARMORS[G.armor].def;
+  const pt=PTOYS[G.ptoy]; if(pt.defPct)d*=1+pt.defPct;
+  return Math.round(d);
+}
+function pCrit(){
+  let c = P_BASE.crit + treeSum('crit');
+  if(PTOYS[G.ptoy].crit)c+=PTOYS[G.ptoy].crit;
+  return c;
+}
+function treeGuardCut(){ return treeSum('guardCut'); }  // 鉄壁
+function treeEpRes(){    return treeSum('epres'); }      // 平静
+function eMax(){ return Math.max(1, ENERGY_BASE+WEAPONS[G.weapon].energy+ARMORS[G.armor].energy-Math.floor(G.ep/EP_ENERGY_DIV)); }
 function addEP(v){ G.ep=Math.max(0,Math.min(100,G.ep+v)); }
 function addInran(v){ G.inran=Math.min(100,G.inran+v); }
-function addExp(v){ G.exp+=v; let up=false; while(G.lv<LV_MAX && G.exp>=EXP_TABLE[G.lv]){G.lv++;up=true;} return up; }
-function log(t,c){ G.log.push([t,c||'dim']); }
 function inranStage(){ return G.inran>=90?'淫乱':G.inran>=60?'発情':G.inran>=30?'自覚':'清純'; }
 
-// ═══════════════════════ 戦闘(bt=戦闘一時状態) ═══════════════════════
-function mkEnemy(key,mult,elite){
-  const b=ENEMIES[key]; const m=mult*(elite?1:1);
-  const eh=elite?ELITE_HP:1, ea=elite?ELITE_ATK:1, ee=elite?ELITE_EP:1;
-  const hp=Math.round(b.hp*mult*eh);
-  return {key,name:(elite?'手強い':'')+b.name,boss:!!b.boss,elite:!!elite,
-    hp,hpMax:hp,atk:Math.round(b.atk*mult*ea),def:b.def,ep:Math.round(b.ep*mult*ee),phys:b.phys,
-    exp:Math.round(b.exp*mult*(elite?2:1)),noAttack:!!b.noAttack,fleeTurns:b.fleeTurns||0,goldReward:b.goldReward,charm:b.charm||0};
+// §5-5 addExp改修: Lvアップ時にSP加算のみ(自動成長廃止)
+function addExp(v){
+  G.exp+=v; let gained=0;
+  while(G.lv<LV_MAX && G.exp>=EXP_TABLE[G.lv]){ G.lv++; gained++; }
+  if(gained>0){
+    const sp=gained*SP_PER_LEVEL; G.sp+=sp;
+    log('⭐ Lv'+G.lv+' に上がった! SP+'+sp+'(未使用SP '+G.sp+')','t');
+  }
+  return gained>0;
 }
-function startBattle(enemyKey,mult,elite,ctx){
-  const e=mkEnemy(enemyKey,mult,elite);
-  if(G.ptoy==='collar') G.ep=Math.max(G.ep,PTOYS.collar.startEp);
-  G.bt={enemy:e,turn:1,energy:0,guard:false,guardUsed:false,parry:false,breakNext:false,nextBig:0,buffs:[],tele:null,charmed:false};
+function log(t,c){ G.log.push([t,c||'dim']); }
+
+// ═══════════════════════ §5-6 mkEnemy(4本立て倍率) ═══════════════════════
+function mkEnemy(key, ch, floorMult, elite){
+  const b=ENEMIES[key];
+  const hp  = Math.round(b.hp   * CH_MULT[ch-1]  * floorMult * (elite?ELITE_HP:1));
+  const atk = Math.round(b.atk  * ATK_MULT[ch-1] * floorMult * (elite?ELITE_ATK:1));
+  const ep  = Math.round(b.ep   * EP_MULT[ch-1]  * floorMult);
+  const def = Math.round(b.def  * DEF_MULT[ch-1]);
+  return {key, name:(elite?'手強い':'')+b.name, boss:!!b.boss, elite:!!elite,
+    hp, hpMax:hp, atk, def, ep, phys:b.phys,
+    exp:Math.round(b.exp*CH_MULT[ch-1]*(elite?2:1)),
+    noAttack:!!b.noAttack, fleeTurns:b.fleeTurns||0, goldReward:b.goldReward, charm:b.charm||0,
+    edebuffs:[] };
+}
+
+// ═══════════════════════ §5-7 startBattle ═══════════════════════
+function startBattle(enemyKey, ch, floorMult, elite, ctx){
+  const e=mkEnemy(enemyKey, ch, floorMult, elite);
+  // ボス戦: 全快
+  if(ctx==='boss'){ G.hp=hpMax(); G.ep=0; G.mp=mpMax(); }
+  if(G.ptoy==='collar') G.ep=Math.max(G.ep, PTOYS.collar.startEp);
+  // MP戦闘開始回復(ここ1箇所のみ)
+  G.mp=Math.min(mpMax(), G.mp + MP_BATTLE_REGEN + treeSum('mpRegen'));
+  G.bt={
+    enemy:e, turn:1, energy:0, energyMax:0,
+    guard:false, guardUsed:false,
+    parry:false, breakNext:false, nextBig:0,
+    buffs:[], attackedThisTurn:false,
+    undyingUsed:false, tele:null
+  };
   G.ctx=ctx; G.screen='battle';
   newTele(); startTurn();
-  log('── '+(elite?'★ボス雑魚 ':'')+e.name+' が現れた ──','t');
+  log('── '+(elite?'★手強い ':'')+e.name+' が現れた ──','t');
   render();
 }
-function startTurn(){ G.bt.energy=eMax(); G.bt.guardUsed=false; }
+
+// §5-3 startTurn: energyMaxスナップショット
+function startTurn(){
+  const bt=G.bt;
+  bt.energyMax = eMax();
+  bt.energy    = bt.energyMax;
+  bt.guardUsed = false;
+  bt.attackedThisTurn = false;
+}
 function newTele(){ const e=G.bt.enemy; const sig=e.boss&&G.bt.turn%4===0; const physR=Math.max(0.05,e.phys-0.12*(G.ptoy!=='none'?1:0)); G.bt.tele={type:RNG()<physR?'phys':'lewd',sig}; }
 function teleText(){ const t=G.bt.tele; if(!t)return ''; if(t.sig)return '★大技の予兆……身構えろ!'; return t.type==='phys'?'次:斬りかかる構え(物理)':'次:妖しく身をよじる(猥褻・EP↑)'; }
+
+// ═══════════════════════ §5-8 canAct ═══════════════════════
 function canAct(kind,key){ const bt=G.bt;
   if(kind==='attack')return bt.energy>=ATTACK_COST;
   if(kind==='guard') return bt.energy>=GUARD_COST && !bt.guardUsed;
-  if(kind==='skill') return bt.energy>=SKILLS[key].cost;
+  if(kind==='skill') return skillKnown(key) && bt.energy>=SKILLS[key].energy && G.mp>=SKILLS[key].mp;
   if(kind==='item')  return bt.energy>=ITEMS[key].energy && G.items[key]>0;
   if(kind==='atoy')  return key!=='none' && bt.energy>=ATOYS[key].energy;
   return false; }
-function hitDmg(mult){ const bt=G.bt,e=bt.enemy; let crit=RNG()<pCrit(),ignoreDef=false;
-  if(bt.breakNext){ignoreDef=true;crit=true;bt.breakNext=false;}
-  let big=1; if(bt.nextBig){big=1+bt.nextBig;bt.nextBig=0;}
-  let d=Math.max(1, pAtk()*mult*big-(ignoreDef?0:e.def)); d=Math.round(d*rf(0.9,1.1)); if(crit)d=Math.round(d*1.5);
-  e.hp=Math.max(0,e.hp-d); return {d,crit}; }
+
+// ═══════════════════════ §5-10 hitDmg ═══════════════════════
+function hitDmg(mult, isBasic){
+  const bt=G.bt, e=bt.enemy;
+  // §2.9 defEff: 敵のDEF×(1 - defデバフpct)
+  let defDebuf=0;
+  const dd=e.edebuffs.find(d=>d.stat==='def'); if(dd)defDebuf=dd.pct;
+  const defEff=Math.max(0, e.def * (1 - defDebuf));
+
+  let crit=RNG()<pCrit(), ignoreDef=false;
+  if(bt.breakNext){ ignoreDef=true; crit=true; bt.breakNext=false; }
+  let bigMult=1; if(bt.nextBig){ bigMult=1+bt.nextBig; bt.nextBig=0; }
+
+  // 初撃の冴え: このターン最初の「攻撃」コマンドかつ isBasic=true or strikeMult passed
+  let firstBonus=1;
+  if(isBasic && !bt.attackedThisTurn && hasNode('S7')){ firstBonus=1.30; }
+  bt.attackedThisTurn=true;
+
+  // 処刑人
+  let executeMult=1;
+  if(hasNode('S8') && e.hp < e.hpMax*0.30) executeMult=1.25;
+
+  let base=pAtk()*mult*bigMult*firstBonus*executeMult;
+  let d=Math.max(1, base - (ignoreDef?0:defEff));
+  d=Math.round(d*rf(0.9,1.1)); if(crit)d=Math.round(d*1.5);
+  e.hp=Math.max(0,e.hp-d);
+  return {d,crit};
+}
+
+// §5-9 applyEDebuff
+function applyEDebuff(stat, pct, turns){
+  const e=G.bt.enemy;
+  const idx=e.edebuffs.findIndex(d=>d.stat===stat);
+  if(idx>=0){ e.edebuffs[idx]={stat,pct,turns}; }
+  else{ e.edebuffs.push({stat,pct,turns}); }
+}
+
+// ═══════════════════════ §5-9 act ═══════════════════════
 function act(kind,key){ const bt=G.bt,e=bt.enemy; if(!canAct(kind,key))return false;
-  if(kind==='attack'){bt.energy-=ATTACK_COST;const r=hitDmg(1);log((r.crit?'クリ! ':'')+'攻撃 → '+r.d+' ダメージ','d');}
-  else if(kind==='guard'){bt.energy-=GUARD_COST;bt.guard=true;bt.guardUsed=true;log('防御(次の被弾/被EPを軽減・このターンもう防御不可)','s');}
-  else if(kind==='skill'){const s=SKILLS[key];bt.energy-=s.cost;
-    if(key==='strike'){const r=hitDmg(s.mult);log('【強撃】'+(r.crit?'クリ! ':'')+r.d+' の大ダメージ','d');}
-    else if(key==='brk'){bt.breakNext=true;log('【崩し】次の一撃が防御貫通+確定クリに','s');}
-    else{bt.parry=true;log('【見切り】次の敵攻撃を-50%+反撃','s');}}
-  else if(kind==='item'){const it=ITEMS[key];bt.energy-=it.energy;G.items[key]--;
-    if(it.effect==='hp'){const h=Math.round(hpMax()*it.val);G.hp=Math.min(hpMax(),G.hp+h);log('どうぐ「'+it.name+'」HP+'+h,'s');}
-    else if(it.effect==='ep'){addEP(it.val);log('どうぐ「'+it.name+'」EP'+it.val,'e');}
-    else{bt.buffs.push({type:'atk',pct:it.pct,turns:it.turns});log('どうぐ「'+it.name+'」攻撃+'+Math.round(it.pct*100)+'%('+it.turns+'T)','s');}}
-  else if(kind==='atoy'){const t=ATOYS[key];bt.energy-=t.energy;addEP(t.epCost);
-    if(t.effect==='atkbuff'){bt.buffs.push({type:'atk',pct:t.pct,turns:t.turns});log('発動型淫具「'+t.name+'」攻撃+'+Math.round(t.pct*100)+'%/EP+'+t.epCost,'e');}
-    else{bt.nextBig=t.pct;log('発動型淫具「'+t.name+'」次撃+'+Math.round(t.pct*100)+'%/EP+'+t.epCost,'e');}}
+  if(kind==='attack'){
+    bt.energy-=ATTACK_COST;
+    const r=hitDmg(1, true);
+    log((r.crit?'クリ! ':'')+'攻撃 → '+r.d+' ダメージ','d');
+  }
+  else if(kind==='guard'){
+    bt.energy-=GUARD_COST; bt.guard=true; bt.guardUsed=true;
+    log('防御(次の被弾/被EPを軽減・このターンもう防御不可)','s');
+  }
+  else if(kind==='skill'){
+    const s=SKILLS[key]; bt.energy-=s.energy; G.mp-=s.mp;
+    if(s.kind==='attack'){
+      const r=hitDmg(s.mult, false);
+      log('【'+s.name+'】'+(r.crit?'クリ! ':'')+r.d+' の大ダメージ','d');
+    } else if(s.kind==='setup'){
+      bt.breakNext=true;
+      log('【崩し】次の一撃が防御貫通+確定クリに','s');
+    } else if(s.kind==='stance'){
+      bt.parry=true;
+      log('【見切り】次の敵攻撃を-50%+反撃','s');
+    } else if(s.kind==='buff'){
+      bt.buffs.push({type:'atk', pct:s.pct, turns:s.turns});
+      log('【集中】自分の攻撃+'+Math.round(s.pct*100)+'%('+s.turns+'T)','s');
+    } else if(s.kind==='debuff'){
+      applyEDebuff(s.stat, s.pct, s.turns);
+      const label=s.stat==='atk'?'攻撃':'防御';
+      log('【'+s.name+'】敵の'+label+'-'+Math.round(s.pct*100)+'%('+s.turns+'T)','s');
+    } else if(s.kind==='ep'){
+      addEP(s.val);
+      log('【深呼吸】EP'+s.val,'e');
+    }
+  }
+  else if(kind==='item'){
+    const it=ITEMS[key]; bt.energy-=it.energy; G.items[key]--;
+    if(it.effect==='hp'){
+      const h=Math.round(hpMax()*it.val); G.hp=Math.min(hpMax(),G.hp+h);
+      log('どうぐ「'+it.name+'」HP+'+h,'s');
+    } else if(it.effect==='ep'){
+      addEP(it.val); log('どうぐ「'+it.name+'」EP'+it.val,'e');
+    } else if(it.effect==='mp'){
+      G.mp=Math.min(mpMax(), G.mp+it.val);
+      log('どうぐ「'+it.name+'」MP+'+it.val,'s');
+    } else {
+      bt.buffs.push({type:'atk',pct:it.pct,turns:it.turns});
+      log('どうぐ「'+it.name+'」攻撃+'+Math.round(it.pct*100)+'%('+it.turns+'T)','s');
+    }
+  }
+  else if(kind==='atoy'){
+    const t=ATOYS[key]; bt.energy-=t.energy; addEP(t.epCost);
+    if(t.effect==='atkbuff'){
+      bt.buffs.push({type:'atk',pct:t.pct,turns:t.turns});
+      log('発動型淫具「'+t.name+'」攻撃+'+Math.round(t.pct*100)+'%/EP+'+t.epCost,'e');
+    } else {
+      bt.nextBig=t.pct;
+      log('発動型淫具「'+t.name+'」次撃+'+Math.round(t.pct*100)+'%/EP+'+t.epCost,'e');
+    }
+  }
   if(e.hp<=0) endBattle('win');
-  return true; }
+  return true;
+}
+
+// ═══════════════════════ §5-11 enemyTurn ═══════════════════════
 function enemyTurn(){ const bt=G.bt,e=bt.enemy,t=bt.tele;
   if(e.fleeTurns && bt.turn>=e.fleeTurns){ log(e.name+'は跳ねて逃げ出した! 取り逃した…','dim'); endBattle('fled'); return; }
   if(e.noAttack){ log(e.name+'は、ぷるぷる震えているだけだ','dim'); }
   else if(t.type==='phys'){
-    let d=Math.max(1,Math.round((e.atk*(t.sig?1.6:1)-pDef()*(t.sig?0.4:1))*(1-(PTOYS[G.ptoy].physRed||0))));
-    if(bt.guard)d=Math.round(d*(t.sig?0.75:0.5));
-    if(bt.parry){d=Math.round(d*0.5);const c=Math.round(pAtk()*(0.6+(t.sig?0.4:0)));e.hp=Math.max(0,e.hp-c);log('見切って反撃! '+c+' を返した','s');}
-    G.hp=Math.max(0,G.hp-d); log((t.sig?'【大技】':'')+e.name+'の攻撃 → '+d+' ダメージ','w');
+    // atkデバフ
+    let atkDebuf=0; const ad=e.edebuffs.find(d=>d.stat==='atk'); if(ad)atkDebuf=ad.pct;
+    const atkEff=Math.round(e.atk * ATK_MULT[G.chapter-1] * (e.elite?ELITE_ATK:1) * (1-atkDebuf));
+    let d=Math.max(1,Math.round((atkEff*(t.sig?1.6:1)-pDef()*(t.sig?0.4:1))*(1-(PTOYS[G.ptoy].physRed||0))));
+    const gc=treeGuardCut();
+    if(bt.guard)d=Math.round(d*(t.sig?0.75-gc:0.5-gc));
+    if(bt.parry){
+      d=Math.round(d*0.5);
+      const c=Math.round(pAtk()*(0.6+(t.sig?0.4:0)));
+      e.hp=Math.max(0,e.hp-c);
+      log('見切って反撃! '+c+' を返した','s');
+    }
+    G.hp=Math.max(0,G.hp-d);
+    log((t.sig?'【大技】':'')+e.name+'の攻撃 → '+d+' ダメージ','w');
   } else {
-    let g=e.ep*(t.sig?1.6:1); if(PTOYS[G.ptoy].epGain)g*=1+PTOYS[G.ptoy].epGain; if(ARMORS[G.armor].epres)g*=1-ARMORS[G.armor].epres; if(bt.guard)g*=(t.sig?0.75:0.5);
-    g=Math.round(g); addEP(g); log((t.sig?'【大技】':'')+e.name+'の猥褻な一撃 → EP+'+g,'e');
+    // EP式: enemy.ep × EP_MULT × fmult × (1+pierce) × (1-防具epres) × (1-ツリーepres) × (1+高揚被EP)
+    // ※ fmult はmkEnemy生成時にepに既に適用済み(ep=b.ep*EP_MULT*fmult)なのでここではそのまま使う
+    let g=e.ep*(t.sig?1.6:1);
+    if(PTOYS[G.ptoy].epGain) g*=1+PTOYS[G.ptoy].epGain;
+    if(ARMORS[G.armor].epres) g*=1-ARMORS[G.armor].epres;
+    if(treeEpRes()>0) g*=1-treeEpRes();
+    if(hasNode('M9')) g*=1+0.10; // 高揚被EP+10%
+    const gc=treeGuardCut();
+    if(bt.guard)g*=(t.sig?0.75-gc:0.5-gc);
+    g=Math.round(g); addEP(g);
+    log((t.sig?'【大技】':'')+e.name+'の猥褻な一撃 → EP+'+g,'e');
   }
-  if(PTOYS[G.ptoy].epTick)addEP(PTOYS[G.ptoy].epTick);
+  // 常時淫具 epTick
+  if(PTOYS[G.ptoy].epTick) addEP(PTOYS[G.ptoy].epTick);
+  // バフtick
   bt.buffs=bt.buffs.map(b=>({...b,turns:b.turns-1})).filter(b=>b.turns>0);
+  // 敵デバフtick
+  e.edebuffs=e.edebuffs.map(d=>({...d,turns:d.turns-1})).filter(d=>d.turns>0);
   bt.guard=false; bt.parry=false; bt.breakNext=false; bt.nextBig=0; bt.turn++;
+  // 不屈判定(HP<=0の前に挿入)
+  if(G.hp<=0 && hasNode('G9') && !bt.undyingUsed){
+    G.hp=1; bt.undyingUsed=true;
+    log('【不屈】致死ダメージ! HP1で踏ん張った(1戦闘1回)','t');
+  }
   if(G.hp<=0){ endBattle('hp'); return; }
   if(G.ep>=100){ endBattle('ep'); return; }
-  newTele(); startTurn(); render();  // ★次の自分の手番=エネルギー全回復(これが抜けていた=回復しないバグ)
+  // ★必須3点セット
+  newTele(); startTurn(); render();
 }
+
 function endBattle(result){ const e=G.bt.enemy;
   if(result==='win'){ addExp(e.exp); }
   G.bt._result=result; G.bt._enemy=e;
   onBattleEnd(result,e);
 }
 
-// ═══════════════════════ 進行(ダンジョン押し引き / ボス / 返済) ═══════════════════════
+// ═══════════════════════ 進行(ダンジョン押し引き) ═══════════════════════
 function goldMult(){ let m=1; if(PTOYS[G.ptoy]&&PTOYS[G.ptoy].gold_pct)m*=1+PTOYS[G.ptoy].gold_pct; return m; }
-function enterDungeon(){ G.hp=hpMax(); G.ep=0; G.dun={floor:1,pool:0,streak:0}; nextFloor(); }
+function enterDungeon(){ G.hp=hpMax(); G.ep=0; G.mp=mpMax(); G.dun={floor:1,pool:0,streak:0}; nextFloor(); }
 function nextFloor(){ const d=G.dun, mobs=CH_MOBS[G.chapter];
   const elite=CHEST_FLOORS.includes(d.floor)||ELITE_FLOORS.includes(d.floor);
   const pool=elite?mobs.filter(m=>m!=='gold_slime'):mobs; const key=pool[rint(0,pool.length-1)]||mobs[0];
   const fmult=CH_MULT[G.chapter-1]*(1+FLOOR_SCALE*(d.floor-1));
-  startBattle(key,fmult,elite,'dungeon'); }
+  startBattle(key, G.chapter, fmult, elite, 'dungeon'); }
 function onBattleEnd(result,e){
   if(G.ctx==='dungeon'){
     const d=G.dun;
@@ -273,39 +545,36 @@ function onBattleEnd(result,e){
       G.screen='dungeonChoice'; render();
     } else if(result==='fled'){ G.screen='dungeonChoice'; render(); }
     else if(result==='flee'){ log('逃走。プール'+d.pool+'Gは取り落とした','w'); banked(0); }
-    else { // 敗北
+    else {
       addInran(result==='ep'?10:6);
       log('敗北('+(result==='ep'?'絶頂':'戦闘不能')+')。抱えた稼ぎ'+d.pool+'Gを失い、淫乱度+'+(result==='ep'?10:6)+'。日を跨いだ…','w');
-      G.dun=null; G.hp=Math.max(1,Math.round(hpMax()*0.5)); G.ep=0; dayToyUpkeep(); G.day++; toHub(result==='ep'?'絶頂敗北。翌朝、宿の天井を見上げる…':'戦闘不能。担がれて宿へ運ばれた…');
+      G.dun=null; G.hp=Math.max(1,Math.round(hpMax()*0.5)); G.ep=0;
+      G.mp=mpMax(); // §7-11 敗北翌朝MP全快
+      dayToyUpkeep(); G.day++; toHub(result==='ep'?'絶頂敗北。翌朝、宿の天井を見上げる…':'戦闘不能。担がれて宿へ運ばれた…');
     }
   } else if(G.ctx==='boss'){
     if(result==='win'){ G.bossCleared=true; const bonus=Math.round((BOSS_G[G.chapter-1]+QUEST_G[G.chapter-1])*INCOME_MULT); G.gold+=bonus;
       log(e.name+' を打ち倒した! 討伐+依頼 +'+bonus+'G','g'); toHub('★'+e.name+'討伐! 返済窓口へ進める。'); }
-    else{ addInran(8); G.hp=Math.max(1,Math.round(hpMax()*0.6)); G.ep=0; log('ボスに敗北。淫乱度+8。再挑戦できる','w'); toHub('ボスに敗れた。立て直して再挑戦を。'); }
-  } else { // free(検証用の単発)
-    toHub(result==='win'?'勝利':'敗北');
-  }
+    else{ addInran(8); G.hp=Math.max(1,Math.round(hpMax()*0.6)); G.ep=0;
+      G.mp=mpMax(); // ボス敗北翌朝MP全快
+      log('ボスに敗北。淫乱度+8。再挑戦できる','w'); toHub('ボスに敗れた。立て直して再挑戦を。'); }
+  } else { toHub(result==='win'?'勝利':'敗北'); }
 }
 function dungeonAdvance(){ if(G.dun.floor>=MAX_FLOOR){ banked(); return; } G.dun.floor++; nextFloor(); }
 function dungeonRetreat(){ banked(); }
 function banked(bank){ const d=G.dun; const g=(bank===0)?0:d.pool; G.gold+=g;
   if(g>0)log(d.floor+'階から帰還。稼ぎ '+g+'G を確定','g');
   dayToyUpkeep(); G.dun=null; G.day++; toHub(g>0?'稼ぎ '+g+'G を持ち帰った。':'手ぶらで帰還。'); }
-function dayToyUpkeep(){ // 装着淫具の日当/淫乱(探索した日ぶん)
-  let wage=0,inr=0; [G.ptoy].forEach(k=>{if(k!=='none'&&PTOYS[k]){ if(PTOYS[k].wage)wage+=PTOYS[k].wage; inr+=PTOYS[k].inran||0; }});
+function dayToyUpkeep(){
+  let inr=0; [G.ptoy].forEach(k=>{if(k!=='none'&&PTOYS[k]){ inr+=PTOYS[k].inran||0; }});
   if(inr){ addInran(inr); } }
 function toHub(msg){ G.screen='hub'; G.bannerMsg=msg||''; checkChapterGate(); render(); }
-function checkChapterGate(){ /* 返済日到達判定は hub 描画で処理 */ }
-
-// モルガンで働く / 宿
+function checkChapterGate(){ }
 function morganWork(){ let best=MORGAN_WORK[0]; MORGAN_WORK.forEach(w=>{if(G.inran>=w[0])best=w;});
   G.gold+=best[1]; addInran(best[2]); log('モルガンの「仕事」で +'+best[1]+'G(淫乱度+'+best[2]+')','g'); G.day++; toHub('モルガンで働いた。'); }
-function inn(){ G.hp=hpMax(); G.ep=0; if(G.ptoy!=='none'){ addInran(1); } log('宿で休んだ(全回復)','dim'); G.day++; toHub('一晩休んだ。'); }
-
-// 返済日
+function inn(){ G.hp=hpMax(); G.ep=0; G.mp=mpMax(); if(G.ptoy!=='none'){ addInran(1); } log('宿で休んだ(全回復)','dim'); G.day++; toHub('一晩休んだ。'); }
 function repaymentDay(){ const need=G.norma[G.chapter-1];
   if(G.gold>=need){ G.gold-=need; log('返済日: '+need+'G を納付。今月分クリア','g');
-    // 低淫乱ボーナス等は省略。次章へ
     if(G.chapter>=4){ endGame(); return; }
     G.chapter++; G.day=1; G.bossCleared=false; toHub('第'+G.chapter+'章へ。'); }
   else{ const short=need-G.gold; G.gold=0;
@@ -315,16 +584,50 @@ function repaymentDay(){ const need=G.norma[G.chapter-1];
 }
 function endGame(bankrupt){ G.over = bankrupt?'bankrupt':(G.inran>=40?'fallen':'pure'); G.screen='result'; render(); }
 
-// ═══════════════════════ 描画 ═══════════════════════
-function renderHUD(){ const need=G.norma[G.chapter-1];
+// ═══════════════════════ §5-13 ツリー操作 ═══════════════════════
+function reqMet(id){
+  const n=TREE[id]; if(!n)return false;
+  if(n.req.length===0)return true;
+  if(n.reqMode==='any') return n.req.some(r=>hasNode(r));
+  return n.req.every(r=>hasNode(r));
+}
+function doAcquireNode(id){
+  if(hasNode(id))return;
+  if(!reqMet(id)){ log('前提ノードが未取得です','w'); return; }
+  const n=TREE[id];
+  if(G.sp<n.cost){ log('SP が足りません(残'+G.sp+'/必要'+n.cost+')','w'); return; }
+  G.nodes.push(id); G.sp-=n.cost;
+  // HP/MPの現在値も増やす(§3 ツリーでノード取得時)
+  if(n.eff.hp)  G.hp+=n.eff.hp;
+  if(n.eff.mp)  G.mp=Math.min(mpMax(), G.mp+n.eff.mp);
+  log('ツリー取得: '+n.name+' ['+id+'](SP残'+G.sp+')','s');
+  render();
+}
+function doRespec(){
+  if(G.gold<RESPEC_COST){ log('振り直しにはGが不足しています(必要'+RESPEC_COST+'G)','w'); return; }
+  G.gold-=RESPEC_COST;
+  G.nodes=[];
+  G.sp=SP_START+2*(G.lv-1);
+  // §7-13 HP/MP clamp
+  G.hp=Math.min(G.hp, hpMax());
+  G.mp=Math.min(G.mp, mpMax());
+  log('スキルツリーを振り直した(-'+RESPEC_COST+'G、SP='+G.sp+')','t');
+  render();
+}
+
+// ═══════════════════════ §5-12 描画 ═══════════════════════
+function renderHUD(){
+  const need=G.norma[G.chapter-1];
+  const spBadge=G.sp>0?` <span class="sp-badge">SP ${G.sp}●</span>`:'';
   $('hud').innerHTML=`
     <div class="s day"><label>DAY</label>${G.day}/${DAYS_PER_CHAPTER+1}</div>
     <div class="s"><label>章</label>第${G.chapter}章</div>
     <div class="s gold"><label>所持金</label>${G.gold}G</div>
     <div class="s debt"><label>返済(Day7)</label>${need}G</div>
-    <div class="s"><label>Lv</label>${G.lv}</div>
+    <div class="s"><label>Lv</label>${G.lv}${spBadge}</div>
     <div class="s hp"><label>HP</label>${G.hp}/${hpMax()}</div>
     <div class="s ep"><label>EP</label>${G.ep}</div>
+    <div class="s" style="color:var(--mp)"><label>MP</label>${G.mp}/${mpMax()}</div>
     <div class="s lust"><label>淫乱</label>${G.inran}(${inranStage()})</div>`;
 }
 function renderBanner(){ const b=$('banner'); if(G.bannerMsg){ b.innerHTML=`<div class="banner info">${G.bannerMsg}</div>`; G.bannerMsg=''; } else b.innerHTML=''; }
@@ -333,13 +636,16 @@ function bar(c,m){ return Math.max(0,Math.min(100,c/m*100)); }
 function render(){
   renderHUD(); renderBanner(); renderLog(); fillVerify();
   const a=$('app');
-  if(G.screen==='hub') a.innerHTML=hubHTML();
-  else if(G.screen==='battle') a.innerHTML=battleHTML();
+  if(G.screen==='hub')      a.innerHTML=hubHTML();
+  else if(G.screen==='battle')      a.innerHTML=battleHTML();
   else if(G.screen==='dungeonChoice') a.innerHTML=dchoiceHTML();
-  else if(G.screen==='shop') a.innerHTML=shopHTML();
-  else if(G.screen==='result') a.innerHTML=resultHTML();
+  else if(G.screen==='shop')        a.innerHTML=shopHTML();
+  else if(G.screen==='tree')        a.innerHTML=treeHTML();
+  else if(G.screen==='result')      a.innerHTML=resultHTML();
 }
+
 function hubHTML(){ const repayDay=G.day>=DAYS_PER_CHAPTER+1;
+  const spLabel=G.sp>0?`スキルツリー(SP ${G.sp})`:'スキルツリー';
   let m='';
   if(repayDay){
     if(!G.bossCleared) m+=`<button class="mbtn boss" data-a="boss"><span><b>ボスに挑む(返済日・必須)</b><small>${ENEMIES[CH_BOSS[G.chapter]].name} を倒すと返済へ進める</small></span><span class="tagd">戦闘</span></button>`;
@@ -348,61 +654,116 @@ function hubHTML(){ const repayDay=G.day>=DAYS_PER_CHAPTER+1;
   }else{
     m+=`<button class="mbtn primary" data-a="dungeon"><span><b>◆ ダンジョンへ潜る</b><small>押し引きで稼ぐ。3・5階はボス雑魚(倒せば宝箱/負ければ淫乱↑)</small></span><span class="tagd">1日</span></button>`;
     m+=`<button class="mbtn" data-a="morgan"><span><b>◆ モルガンで働く</b><small>確実な即金。淫乱度が上がる</small></span><span class="tagd">1日</span></button>`;
-    m+=`<button class="mbtn" data-a="inn"><span><b>◆ 宿で休む</b><small>HP全回復</small></span><span class="tagd">1日</span></button>`;
+    m+=`<button class="mbtn" data-a="inn"><span><b>◆ 宿で休む</b><small>HP・MP全回復</small></span><span class="tagd">1日</span></button>`;
     m+=`<button class="mbtn" data-a="shop"><span><b>ショップ(モルガン商店)</b><small>装備・淫具・道具を買う</small></span></button>`;
   }
+  // ツリーボタン常設(日は進まない)
+  m+=`<button class="mbtn ${G.sp>0?'primary':''}" data-a="tree"><span><b>${spLabel}</b><small>呼吸を整えて力を練る(日は進まない)${G.sp>0?' ← SP があります!':''}</small></span></button>`;
   return `<div class="panel"><h2>拠点 — 第${G.chapter}章 DAY ${G.day}</h2><div class="desc">${repayDay?'返済日。ボスを倒して返済へ。':'返済日('+(DAYS_PER_CHAPTER+1)+'日目)までに '+G.norma[G.chapter-1]+'G を用意する。'}</div><div class="menu">${m}</div></div>
     <div class="panel"><h2>ステータス</h2>${statTable()}</div>`;
 }
 function statTable(){ return `<table class="stat"><tr><td>HP <b>${G.hp}/${hpMax()}</b></td><td>ATK <b>${pAtk()}</b></td><td>DEF <b>${pDef()}</b></td><td>最大エネルギー <b>${eMax()}</b></td></tr>
+  <tr><td>MP <b>${G.mp}/${mpMax()}</b></td><td>SP未使用 <b>${G.sp}</b></td><td>習得ノード <b>${G.nodes.length}</b></td><td>クリ率 <b>${Math.round(pCrit()*100)}%</b></td></tr>
   <tr><td>武器 <b>${WEAPONS[G.weapon].name}</b></td><td>防具 <b>${ARMORS[G.armor].name}</b></td><td>常時淫具 <b>${PTOYS[G.ptoy].name}</b></td><td>発動淫具 <b>${ATOYS[G.atoy].name}</b></td></tr>
-  <tr><td>ポーション <b>${G.items.potion}</b></td><td>聖水 <b>${G.items.holy}</b></td><td>力の薬 <b>${G.items.atk}</b></td><td>淫乱度 <b>${G.inran}</b></td></tr></table>`; }
+  <tr><td>ポーション <b>${G.items.potion}</b></td><td>聖水 <b>${G.items.holy}</b></td><td>力の薬 <b>${G.items.atk}</b></td><td>マナ水 <b>${G.items.mana}</b></td></tr></table>`; }
 
 function dchoiceHTML(){ const d=G.dun;
+  const spLabel=G.sp>0?`スキルツリー(SP ${G.sp})`:'スキルツリー';
   return `<div class="panel"><h2>探索中 — ${d.floor}階</h2>
-    <div class="desc">稼ぎプール <b style="color:var(--gold)">${d.pool}G</b>(連勝${d.streak})　HP ${G.hp}/${hpMax()}　EP ${G.ep}</div>
+    <div class="desc">稼ぎプール <b style="color:var(--gold)">${d.pool}G</b>(連勝${d.streak})　HP ${G.hp}/${hpMax()}　EP ${G.ep}　MP ${G.mp}/${mpMax()}</div>
     <div class="menu">
-      ${d.floor>=MAX_FLOOR?`<div class="hint" style="margin-bottom:4px">最深部。これ以上は潜れない。</div>`:`<button class="mbtn primary" data-a="advance"><span><b>◆ 奥へ進む(${d.floor+1}階)</b><small>倍率↑・敵強化。次の${CHEST_FLOORS.includes(d.floor+1)?'階はボス雑魚+宝箱':'階へ'}。HP/EPは持ち越し</small></span></button>`}
+      ${d.floor>=MAX_FLOOR?`<div class="hint" style="margin-bottom:4px">最深部。これ以上は潜れない。</div>`:`<button class="mbtn primary" data-a="advance"><span><b>◆ 奥へ進む(${d.floor+1}階)</b><small>倍率↑・敵強化。HP/EP/MPは持ち越し</small></span></button>`}
       <button class="mbtn" data-a="retreat"><span><b>引き上げる</b><small>稼ぎ ${d.pool}G を確定して帰還(1日消費)</small></span></button>
+      <button class="mbtn ${G.sp>0?'primary':''}" data-a="tree"><span><b>${spLabel}</b><small>呼吸を整えて力を練る(日は進まない)</small></span></button>
     </div></div>`;
 }
+
+// §5-13 treeHTML (§7-14: dungeonChoice経由は振り直しボタン非表示)
+function treeHTML(){
+  const fromDungeon=(G.dun!==null);
+  const brs=['sword','guard','mind'];
+  const brNames={sword:'剣の道(火力)',guard:'体の道(生存)',mind:'心の道(MP・術)'};
+  const cols=brs.map(br=>{
+    const nodes=Object.keys(TREE).filter(id=>TREE[id].br===br).sort((a,b)=>TREE[a].tier-TREE[b].tier);
+    const items=nodes.map(id=>{
+      const n=TREE[id];
+      const taken=hasNode(id);
+      const locked=!taken&&!reqMet(id);
+      let cls='node'+(taken?' taken':locked?' locked':'');
+      const reqLabel=n.req.length>0?'　要:'+(n.reqMode==='any'?n.req.join('/')+'のどれか':n.req.join('+')):'';
+      return `<button class="${cls}" data-node="${id}"><span class="node-cost">${taken?'✓':n.cost+'SP'}</span><b>${n.name}</b><small>${n.note}${reqLabel}</small></button>`;
+    }).join('');
+    return `<div class="tree-col"><h3>${brNames[br]}</h3>${items}</div>`;
+  }).join('');
+  const respecBtn=!fromDungeon?`<button class="btn" data-a="respec" ${G.gold<RESPEC_COST?'disabled':''}>振り直し(${RESPEC_COST}G)</button>`:'';
+  return `<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <h2>スキルツリー — SP残り ${G.sp}</h2>
+    <div style="display:flex;gap:8px">${respecBtn}<button class="btn go" data-a="closetree">戻る</button></div></div>
+    <div class="desc">取得ノード ${G.nodes.length}/26  総コスト46SP  クリア想定SP≈23〜25(50%)</div>
+    <div class="tree-grid">${cols}</div></div>`;
+}
+
 function shopHTML(){
   const wrow=(k,o,cur,slot)=>`<div class="srow ${cur===k?'owned':''}"><span class="n"><b>${o.name}</b><small>${o.note||''}</small></span>${cur===k?'<span class="hint">装備中</span>':`<button class="btn" data-buy="${slot}:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button>`}</div>`;
   const toyrow=(k,o,slot)=>{ const owned=G.toysOwned.includes(k); const equipped=(slot==='ptoy'?G.ptoy:G.atoy)===k;
     return `<div class="srow ${equipped?'owned':''}"><span class="n"><b>${o.name}</b><small>${o.note||''}</small></span>${equipped?'<span class="hint">装備中</span>':owned?`<button class="btn" data-equip="${slot}:${k}">装備</button>`:`<button class="btn" data-buy="${slot}:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button>`}</div>`; };
-  const itemrow=(k,o)=>`<div class="srow"><span class="n"><b>${o.name}</b><small>${o.note}・所持${G.items[k]}</small></span><button class="btn" data-buy="item:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button>`;
-  return `<div class="panel"><h2>モルガン商店</h2><div class="desc">所持金 ${G.gold}G。どうぐ(消耗品/発動型淫具)は戦闘のバフ/回復の要=金を賭ける層。</div>
+  const itemrow=(k,o)=>`<div class="srow"><span class="n"><b>${o.name}</b><small>${o.note}・所持${G.items[k]}</small></span><button class="btn" data-buy="item:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button></div>`;
+  return `<div class="panel"><h2>モルガン商店</h2><div class="desc">所持金 ${G.gold}G。マナ水でMPを金で補充できる。</div>
     <h2 style="font-size:12px;color:var(--sub);margin:6px 0 6px">武器</h2><div class="shop">${Object.keys(WEAPONS).filter(k=>k!=='old').map(k=>wrow(k,WEAPONS[k],G.weapon,'weapon')).join('')}</div>
     <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">防具</h2><div class="shop">${Object.keys(ARMORS).filter(k=>k!=='travel').map(k=>wrow(k,ARMORS[k],G.armor,'armor')).join('')}</div>
-    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・常時型(装備で効果)</h2><div class="shop">${['rotor','pierce','pearl','collar'].map(k=>toyrow(k,PTOYS[k],'ptoy')).join('')}</div>
-    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・発動型(どうぐ内・使用でEP↑)</h2><div class="shop">${['vibrator','crest'].map(k=>toyrow(k,ATOYS[k],'atoy')).join('')}</div>
+    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・常時型</h2><div class="shop">${['rotor','pierce','pearl','collar'].map(k=>toyrow(k,PTOYS[k],'ptoy')).join('')}</div>
+    <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">淫具・発動型</h2><div class="shop">${['vibrator','crest'].map(k=>toyrow(k,ATOYS[k],'atoy')).join('')}</div>
     <h2 style="font-size:12px;color:var(--sub);margin:12px 0 6px">消耗品</h2><div class="shop">${Object.keys(ITEMS).map(k=>itemrow(k,ITEMS[k])).join('')}</div>
     <div style="margin-top:14px"><button class="btn go" data-a="closeshop">拠点へ戻る</button></div></div>`;
 }
 function resultHTML(){ const names={pure:'純情完済 — 何も売らずに返し切った',fallen:'淫堕完済 — 返したが、身体が覚えてしまった',bankrupt:'破産 — 競売の壇上で番号を呼ばれた'};
   return `<div class="banner ${G.over==='bankrupt'?'lose':'win'}">■ ${names[G.over]} ■</div>
-    <div class="panel"><div class="desc">最終 淫乱度 ${G.inran}(${inranStage()})　Lv${G.lv}</div><button class="btn go" data-a="restart">もう一度</button></div>`;
+    <div class="panel"><div class="desc">最終 淫乱度 ${G.inran}(${inranStage()})　Lv${G.lv}　ノード${G.nodes.length}取得</div><button class="btn go" data-a="restart">もう一度</button></div>`;
 }
 
-// 戦闘画面
-function pipHTML(){ const mx=eMax(); let s=''; for(let i=0;i<Math.max(mx,10);i++){ if(i>=mx)continue; s+=`<span class="pip ${i<G.bt.energy?'on':''}"></span>`; } return s; }
+// ═══════════════════════ §5-12 戦闘画面 ═══════════════════════
+// pipHTML: bt.energyMax基準で描画
+function pipHTML(){
+  const mx=G.bt.energyMax; let s='';
+  for(let i=0;i<Math.max(mx,1);i++){
+    s+=`<span class="pip ${i<G.bt.energy?'on':''}"></span>`;
+  }
+  return s;
+}
 function buffHTML(){ const bt=G.bt,b=[]; bt.buffs.forEach(x=>b.push('攻撃+'+Math.round(x.pct*100)+'%('+x.turns+'T)')); if(bt.breakNext)b.push('崩し'); if(bt.nextBig)b.push('次撃+'+Math.round(bt.nextBig*100)+'%'); if(bt.parry)b.push('見切り'); if(bt.guard)b.push('防御'); return b.length?'◆ '+b.join(' / '):''; }
+function edebuffsHTML(){ const e=G.bt.enemy; if(!e.edebuffs||e.edebuffs.length===0)return ''; return '▼ '+e.edebuffs.map(d=>(d.stat==='atk'?'ATK':'DEF')+'-'+Math.round(d.pct*100)+'%('+d.turns+'T)').join(' / '); }
+
 function battleHTML(){ const bt=G.bt,e=bt.enemy;
   const en=(k,key)=>!canAct(k,key);
-  const skills=Object.keys(SKILLS).map(k=>`<div class="subitem ${en('skill',k)?'dis':''}" data-k="skill" data-x="${k}"><span>${SKILLS[k].name} <small>${SKILLS[k].note}</small></span><span class="sc">${SKILLS[k].cost}⚡</span></div>`).join('');
+  // スキル: 習得済みのみ表示(§4.2)
+  const knownSkills=Object.keys(SKILLS).filter(k=>skillKnown(k));
+  let skills='';
+  if(knownSkills.length===0){
+    skills=`<div class="subitem dis"><span><small>スキルは【スキルツリー】で習得する</small></span></div>`;
+  } else {
+    skills=knownSkills.map(k=>{
+      const s=SKILLS[k];
+      const dis=en('skill',k);
+      return `<div class="subitem ${dis?'dis':''}" data-k="skill" data-x="${k}"><span>${s.name} <small>${s.note}</small></span><span><span class="sc">${s.energy}⚡</span> <span class="scm">${s.mp}MP</span></span></div>`;
+    }).join('');
+  }
   const items=Object.keys(ITEMS).map(k=>`<div class="subitem ${en('item',k)?'dis':''}" data-k="item" data-x="${k}"><span>${ITEMS[k].name} <small>${ITEMS[k].note}・残${G.items[k]}</small></span><span class="sc">${ITEMS[k].energy}⚡</span></div>`).join('');
-  const atoy = G.atoy!=='none' ? `<div class="subitem ${en('atoy',G.atoy)?'dis':''}" data-k="atoy" data-x="${G.atoy}"><span>${ATOYS[G.atoy].name} <small>${ATOYS[G.atoy].note}・消耗なし</small></span><span class="sc">${ATOYS[G.atoy].energy}⚡</span></div>` : `<div class="subitem dis"><span><small>発動型淫具は未装備</small></span></div>`;
+  const atoy = G.atoy!=='none' ? `<div class="subitem ${en('atoy',G.atoy)?'dis':''}" data-k="atoy" data-x="${G.atoy}"><span>${ATOYS[G.atoy].name} <small>${ATOYS[G.atoy].note}</small></span><span class="sc">${ATOYS[G.atoy].energy}⚡</span></div>` : `<div class="subitem dis"><span><small>発動型淫具は未装備</small></span></div>`;
+  const edeb=edebuffsHTML();
   return `<div class="arena">
     <div class="card"><div class="who"><b>れいな</b><span class="lv">Lv.${G.lv} ATK${pAtk()}/DEF${pDef()}</span></div>
       <div class="g hp"><div class="glabel"><span>HP</span><span>${G.hp}/${hpMax()}</span></div><div class="bar"><i style="width:${bar(G.hp,hpMax())}%"></i></div></div>
       <div class="g ep"><div class="glabel"><span>EP(興奮)</span><span>${G.ep}/100</span></div><div class="bar"><i style="width:${bar(G.ep,100)}%"></i></div></div>
-      <div class="pips">${pipHTML()}<span class="etxt">${bt.energy}/${eMax()} 行動力</span></div><div class="buffs">${buffHTML()}</div></div>
+      <div class="g mp"><div class="glabel"><span>MP</span><span>${G.mp}/${mpMax()}</span></div><div class="bar"><i style="width:${bar(G.mp,mpMax())}%"></i></div></div>
+      <div class="pips">${pipHTML()}<span class="etxt">${bt.energy}/${bt.energyMax} 行動力</span></div>
+      <div class="buffs">${buffHTML()}</div></div>
     <div class="card enemy"><div class="who"><b>${e.name}</b><span class="lv">${e.boss?'BOSS':(e.elite?'ELITE':'敵')}</span></div>
       <div class="g hp"><div class="glabel"><span>HP</span><span>${e.hp}/${e.hpMax}</span></div><div class="bar"><i style="width:${bar(e.hp,e.hpMax)}%"></i></div></div>
+      ${edeb?`<div class="edebuffs">${edeb}</div>`:'<div class="edebuffs"></div>'}
       <div class="tele ${bt.tele&&(bt.tele.sig||bt.tele.type==='lewd')?'':'calm'}">${teleText()}</div></div></div>
     <div class="actions"><div class="actrow">
       <button class="act primary" data-k="attack" ${en('attack')?'disabled':''}>攻撃<span class="c">${ATTACK_COST}⚡</span></button>
-      <button class="act" data-sub="skill">スキル<span class="c">3-5⚡</span><div class="sub">${skills}</div></button>
+      <button class="act" data-sub="skill">スキル<div class="sub">${skills}</div></button>
       <button class="act" data-k="guard" ${en('guard')?'disabled':''}>防御<span class="c">${GUARD_COST}⚡</span></button>
       <button class="act" data-sub="item">どうぐ<span class="c">2⚡</span><div class="sub">${items}<div style="border-top:1px solid var(--line);margin:5px 2px"></div>${atoy}</div></button>
       <div class="endbar"><span class="hint">残り行動力の範囲で何回でも</span><button class="btn go" data-k="end">ターン終了 ▶</button></div>
@@ -410,19 +771,31 @@ function battleHTML(){ const bt=G.bt,e=bt.enemy;
 }
 function renderLog(){ const el=$('log'); el.innerHTML=G.log.slice(-70).map(([t,c])=>`<div><span class="${c}">${t}</span></div>`).join(''); el.scrollTop=el.scrollHeight; }
 
-// ═══════════════════════ 入力 ═══════════════════════
+// ═══════════════════════ 入力(クリック委譲) ═══════════════════════
 $('app').addEventListener('click',ev=>{
-  const a=ev.target.closest('[data-a]'); if(a){ handleAction(a.dataset.a); return; }
+  // ★クリック委譲の優先順: data-node > .subitem > data-sub > data-buy > data-equip > data-k > data-a
+  const node=ev.target.closest('[data-node]');
+  if(node){ doAcquireNode(node.dataset.node); return; }
+
+  const item=ev.target.closest('.subitem');
+  if(item){ if(!item.classList.contains('dis')){ act(item.dataset.k,item.dataset.x); document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); if(G.screen==='battle')render(); } return; }
+
+  const sub=ev.target.closest('[data-sub]');
+  if(sub){ const open=sub.classList.contains('open'); document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); if(!open)sub.classList.add('open'); ev.stopPropagation(); return; }
+
   const buy=ev.target.closest('[data-buy]'); if(buy){ doBuy(buy.dataset.buy); return; }
   const eq=ev.target.closest('[data-equip]'); if(eq){ doEquip(eq.dataset.equip); return; }
-  // 戦闘: サブ項目を最優先(親data-subに吸われるバグ回避)
-  const item=ev.target.closest('.subitem'); if(item){ if(!item.classList.contains('dis')){ act(item.dataset.k,item.dataset.x); document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); if(G.screen==='battle')render(); } return; }
-  const sub=ev.target.closest('[data-sub]'); if(sub){ const open=sub.classList.contains('open'); document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); if(!open)sub.classList.add('open'); ev.stopPropagation(); return; }
-  const k=ev.target.closest('[data-k]'); if(k){ const kind=k.dataset.k;
+
+  const k=ev.target.closest('[data-k]');
+  if(k){ const kind=k.dataset.k;
     if(kind==='end'){ if(G.screen==='battle') enemyTurn(); return; }
-    if(kind==='attack'||kind==='guard'){ act(kind,null); if(G.screen==='battle')render(); } }
+    if(kind==='attack'||kind==='guard'){ act(kind,null); if(G.screen==='battle')render(); } return;
+  }
+
+  const a=ev.target.closest('[data-a]'); if(a){ handleAction(a.dataset.a); return; }
 });
 document.addEventListener('click',ev=>{ if(!ev.target.closest('[data-sub]')&&!ev.target.closest('.sub')) document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); });
+
 function handleAction(a){
   if(a==='dungeon')enterDungeon();
   else if(a==='morgan')morganWork();
@@ -431,9 +804,12 @@ function handleAction(a){
   else if(a==='closeshop'){G.screen='hub';render();}
   else if(a==='advance')dungeonAdvance();
   else if(a==='retreat')dungeonRetreat();
-  else if(a==='boss')startBattle(CH_BOSS[G.chapter],CH_MULT[G.chapter-1],false,'boss');
+  else if(a==='boss') startBattle(CH_BOSS[G.chapter], G.chapter, 1, false, 'boss');
   else if(a==='repay')repaymentDay();
   else if(a==='restart')newGame();
+  else if(a==='tree'){G._prevScreen=G.screen;G.screen='tree';render();}
+  else if(a==='closetree'){G.screen=G._prevScreen||'hub';render();}
+  else if(a==='respec')doRespec();
 }
 function doBuy(spec){ const [slot,key]=spec.split(':');
   const src = slot==='weapon'?WEAPONS[key]: slot==='armor'?ARMORS[key]: slot==='item'?ITEMS[key]: slot==='ptoy'?PTOYS[key]:ATOYS[key];
@@ -445,57 +821,361 @@ function doBuy(spec){ const [slot,key]=spec.split(':');
 }
 function doEquip(spec){ const [slot,key]=spec.split(':'); if(slot==='ptoy')G.ptoy=key; else G.atoy=key; render(); }
 
-// ═══════════════════════ 検証(オート対戦) ═══════════════════════
-function aiSpam(s){ return s.energy>=ATTACK_COST?['attack',null]:['end',null]; }
-function aiSmart(s){ const hpr=s.hp/s.hpMax,ehr=s.e.hp/s.e.hpMax;
-  if(s.tele.sig&&hpr<0.6){ if(s.energy>=SKILLS.parry.cost)return['skill','parry']; if(s.energy>=GUARD_COST&&!s.guardUsed)return['guard',null]; }
-  if(hpr<0.3&&s.items.potion>0&&s.energy>=2)return['item','potion'];
-  if(s.ep>=86&&ehr>0.16&&s.items.holy>0&&s.energy>=2)return['item','holy'];
-  if(s.breakNext&&s.energy>=ATTACK_COST)return['attack',null];
-  if(s.energy>=SKILLS.strike.cost&&ehr>0.3)return['skill','strike'];
-  if(s.energy>=ATTACK_COST)return['attack',null];
-  return['end',null]; }
-function simOne(enemyKey,mult,ai){ // 装備は現在のGを使用。純戦闘のみ(HP/EP毎戦リセット)
-  const e=mkEnemy(enemyKey,mult,false);
-  const S={hp:hpMax(),hpMax:hpMax(),ep:(G.ptoy==='collar'?40:0),energy:0,guard:false,guardUsed:false,parry:false,breakNext:false,nextBig:0,buffs:[],e,turn:1,tele:null,items:{potion:3,holy:2,atk:1}};
-  const atkOf=()=>{ let a=8+G.lv*2+WEAPONS[G.weapon].atk; const pt=PTOYS[G.ptoy]; if(pt.atkPct)a*=1+pt.atkPct; S.buffs.forEach(b=>{if(b.type==='atk')a*=1+b.pct;}); return Math.round(a); };
-  const defOf=()=>{ let d=3+G.lv+ARMORS[G.armor].def; const pt=PTOYS[G.ptoy]; if(pt.defPct)d*=1+pt.defPct; return Math.round(d); };
-  const emx=()=>Math.max(1,ENERGY_BASE+WEAPONS[G.weapon].energy+ARMORS[G.armor].energy-Math.floor(S.ep/12));
-  const tele=()=>{const sig=e.boss&&S.turn%4===0;const pr=Math.max(0.05,e.phys-0.12*(G.ptoy!=='none'?1:0));S.tele={type:RNG()<pr?'phys':'lewd',sig};};
-  tele(); S.energy=emx(); let guard=0;
-  while(guard<400){ guard++;
-    let acts=0,ended=null;
-    while(acts<20){ const [k,key]=ai(S);
+// ═══════════════════════ §5-15 検証ハーネス v3 ═══════════════════════
+
+// ビルドプリセット(§6.2)
+const SIM_PRESETS={
+  P1:  {lv:2,  weapon:'old',    armor:'travel',  nodes:['S1','G1','S2']},
+  P2:  {lv:5,  weapon:'iron',   armor:'leather', nodes:GENERIC_BUILD_ORDER.slice(0,11)},
+  P3:  {lv:8,  weapon:'knight', armor:'leather', nodes:GENERIC_BUILD_ORDER.slice(0,17)},
+  P4:  {lv:11, weapon:'knight', armor:'plate',   nodes:GENERIC_BUILD_ORDER.slice(0,23)},
+  BUILD_SWORD:{lv:8,weapon:'knight',armor:'leather',nodes:['S1','S2','S3','S4','S5','S6','S7','S8','G1','M1','G3']},
+  BUILD_GUARD:{lv:8,weapon:'knight',armor:'leather',nodes:['G1','G2','G3','G4','G5','G6','G7','G8','G9','S1','M1']},
+  BUILD_MIND: {lv:8,weapon:'knight',armor:'leather',nodes:['M1','M2','M3','M4','M5','M6','M7','M8','M9']},
+};
+
+function simTreeSum(nodes, key){
+  let v=0;
+  nodes.forEach(id=>{ const n=TREE[id]; if(n&&n.eff&&n.eff[key]!==undefined) v+=n.eff[key]; });
+  return v;
+}
+function simHasNode(nodes, id){ return nodes.includes(id); }
+function simSkillKnown(nodes, k){ return nodes.includes(SKILLS[k].node); }
+
+// §6.1 AI3種+ビルド対応
+function aiSpam_v3(S){ return S.energy>=ATTACK_COST?['attack',null]:['end',null]; }
+function aiSkillSpam_v3(S){
+  if(simSkillKnown(S.nodes,'strike')&&S.energy>=SKILLS.strike.energy&&S.mp>=SKILLS.strike.mp) return['skill','strike'];
+  if(S.energy>=ATTACK_COST) return['attack',null];
+  return['end',null];
+}
+function aiSmart_v3(S){
+  const hpr=S.hp/S.hpMax, ep=S.ep;
+  // 1 見切り/防御
+  if(S.tele.sig&&(hpr<0.6||ep>60)){
+    if(simSkillKnown(S.nodes,'parry')&&S.energy>=SKILLS.parry.energy&&S.mp>=SKILLS.parry.mp) return['skill','parry'];
+    if(S.energy>=GUARD_COST&&!S.guardUsed) return['guard',null];
+  }
+  // 2 ポーション
+  if(hpr<0.3&&S.items.potion>0&&S.energy>=2) return['item','potion'];
+  // 3 EP緊急処理
+  if(ep>=70&&S.items.holy>0&&S.energy>=2) return['item','holy'];
+  if(ep>=70&&simSkillKnown(S.nodes,'breath')&&S.energy>=SKILLS.breath.energy&&S.mp>=SKILLS.breath.mp) return['skill','breath'];
+  // 4 息抜き
+  if(ep>=55&&simSkillKnown(S.nodes,'breath')&&S.mp>=10&&S.energy>=SKILLS.breath.energy&&S.mp>=SKILLS.breath.mp) return['skill','breath'];
+  // 5 弱点看破
+  if(simSkillKnown(S.nodes,'expose')&&S.energy>=SKILLS.expose.energy&&S.mp>=SKILLS.expose.mp&&!S.edebuffs.find(d=>d.stat==='def')) return['skill','expose'];
+  // 6 集中
+  if((S.e.boss||S.e.elite)&&S.turn===1&&simSkillKnown(S.nodes,'focus')&&S.energy>=SKILLS.focus.energy&&S.mp>=SKILLS.focus.mp) return['skill','focus'];
+  // 7 威圧
+  if((S.e.boss||S.e.elite)&&S.e.phys>=0.5&&simSkillKnown(S.nodes,'menace')&&S.energy>=SKILLS.menace.energy&&S.mp>=SKILLS.menace.mp&&!S.edebuffs.find(d=>d.stat==='atk')) return['skill','menace'];
+  // 8 崩し後攻撃
+  if(S.breakNext&&S.energy>=ATTACK_COST) return['attack',null];
+  // 9 強撃
+  if(simSkillKnown(S.nodes,'strike')&&S.e.hp>S.e.hpMax*0.25&&S.energy>=SKILLS.strike.energy&&S.mp>=SKILLS.strike.mp) return['skill','strike'];
+  // 10 通常
+  if(S.energy>=ATTACK_COST) return['attack',null];
+  return['end',null];
+}
+
+function simOne_v3(enemyKey, ch, floorMult, elite, ai, preset){
+  const p=SIM_PRESETS[preset];
+  const nodes=p.nodes;
+  const wpn=WEAPONS[p.weapon], arm=ARMORS[p.armor];
+
+  const hpM=P_BASE.hp+simTreeSum(nodes,'hp');
+  const mpM=MP_BASE+simTreeSum(nodes,'mp');
+  const critBase=P_BASE.crit+simTreeSum(nodes,'crit')+(PTOYS['none'].crit||0);
+  const b=ENEMIES[enemyKey];
+  const ehp =Math.round(b.hp *CH_MULT[ch-1]*floorMult*(elite?ELITE_HP:1));
+  const eatk=Math.round(b.atk*ATK_MULT[ch-1]*floorMult*(elite?ELITE_ATK:1));
+  const eep =Math.round(b.ep *EP_MULT[ch-1] *floorMult);
+  const edef=Math.round(b.def*DEF_MULT[ch-1]);
+  const e={key:enemyKey,name:b.name,boss:!!b.boss,elite:!!elite,hp:ehp,hpMax:ehp,atk:eatk,def:edef,ep:eep,phys:b.phys,noAttack:!!b.noAttack,fleeTurns:b.fleeTurns||0,edebuffs:[]};
+  const S={
+    hp:hpM,hpMax:hpM,ep:0,mp:Math.min(mpM, mpM+MP_BATTLE_REGEN+simTreeSum(nodes,'mpRegen')),mpMax:mpM,
+    energy:0,energyMax:0,guard:false,guardUsed:false,parry:false,breakNext:false,nextBig:0,
+    buffs:[],attackedThisTurn:false,undyingUsed:false,e,turn:1,tele:null,
+    items:{potion:3,holy:2,atk:1,mana:1},nodes,edebuffs:[]
+  };
+  const atkOf=()=>{
+    let a=P_BASE.atk+simTreeSum(nodes,'atk')+wpn.atk;
+    if(simHasNode(nodes,'M9')&&S.ep>=50) a*=1.20;
+    S.buffs.forEach(bf=>{if(bf.type==='atk')a*=1+bf.pct;});
+    return Math.round(a);
+  };
+  const defOf=()=>Math.round(P_BASE.def+simTreeSum(nodes,'def')+arm.def);
+  const emx=()=>Math.max(1,ENERGY_BASE+wpn.energy+arm.energy-Math.floor(S.ep/EP_ENERGY_DIV));
+  const critOf=()=>P_BASE.crit+simTreeSum(nodes,'crit');
+  const guardCutOf=()=>simTreeSum(nodes,'guardCut');
+  const epresOf=()=>arm.epres+simTreeSum(nodes,'epres');
+  const teleF=()=>{ const sig=e.boss&&S.turn%4===0; const pr=Math.max(0.05,e.phys); S.tele={type:RNG()<pr?'phys':'lewd',sig}; };
+  teleF(); S.energyMax=emx(); S.energy=S.energyMax;
+  let guard=0;
+  while(guard<500){ guard++;
+    let acts=0;
+    while(acts<20){ acts++;
+      const [k,key]=ai(S);
       if(k==='end')break;
-      if(k==='attack'){ if(S.energy<ATTACK_COST)break; S.energy-=ATTACK_COST; let cr=RNG()<pCrit(),ig=false; if(S.breakNext){ig=true;cr=true;S.breakNext=false;} let d=Math.max(1,atkOf()-(ig?0:e.def)); d=Math.round(d*rf(0.9,1.1)); if(cr)d=Math.round(d*1.5); e.hp-=d; }
-      else if(k==='guard'){ if(S.energy<GUARD_COST||S.guardUsed)break; S.energy-=GUARD_COST; S.guard=true; S.guardUsed=true; }
-      else if(k==='skill'){ const sk=SKILLS[key]; if(S.energy<sk.cost)break; S.energy-=sk.cost; if(key==='strike'){let cr=RNG()<pCrit();let d=Math.max(1,atkOf()*sk.mult-e.def);d=Math.round(d*rf(0.9,1.1));if(cr)d=Math.round(d*1.5);e.hp-=d;} else if(key==='brk')S.breakNext=true; else S.parry=true; }
-      else if(k==='item'){ const it=ITEMS[key]; if(S.energy<it.energy||S.items[key]<=0)break; S.energy-=it.energy; S.items[key]--; if(it.effect==='hp')S.hp=Math.min(S.hpMax,S.hp+Math.round(S.hpMax*it.val)); else if(it.effect==='ep')S.ep=Math.max(0,S.ep+it.val); else S.buffs.push({type:'atk',pct:it.pct,turns:it.turns}); }
-      acts++;
-      if(e.hp<=0){ended='win';break;}
+      if(k==='attack'){
+        if(S.energy<ATTACK_COST)break; S.energy-=ATTACK_COST;
+        // 初撃の冴え
+        let fs=1; if(!S.attackedThisTurn&&simHasNode(nodes,'S7'))fs=1.30;
+        S.attackedThisTurn=true;
+        let cr=RNG()<critOf(),ig=false;
+        if(S.breakNext){ig=true;cr=true;S.breakNext=false;}
+        let dd=e.edebuffs.find(d=>d.stat==='def'); let defDebuf=dd?dd.pct:0;
+        const defEff=Math.max(0,e.def*(1-defDebuf));
+        // 処刑人
+        let exMult=1; if(simHasNode(nodes,'S8')&&e.hp<e.hpMax*0.30)exMult=1.25;
+        let d=Math.max(1,atkOf()*1*fs*exMult-(ig?0:defEff));
+        d=Math.round(d*rf(0.9,1.1)); if(cr)d=Math.round(d*1.5); e.hp-=d;
+      } else if(k==='guard'){
+        if(S.energy<GUARD_COST||S.guardUsed)break; S.energy-=GUARD_COST; S.guard=true; S.guardUsed=true;
+      } else if(k==='skill'){
+        const sk=SKILLS[key]; if(S.energy<sk.energy||S.mp<sk.mp)break; S.energy-=sk.energy; S.mp-=sk.mp;
+        if(sk.kind==='attack'){
+          let dd=e.edebuffs.find(d=>d.stat==='def'); let defDebuf=dd?dd.pct:0;
+          const defEff=Math.max(0,e.def*(1-defDebuf));
+          let exMult=1; if(simHasNode(nodes,'S8')&&e.hp<e.hpMax*0.30)exMult=1.25;
+          let cr=RNG()<critOf();
+          let d=Math.max(1,atkOf()*sk.mult*exMult-defEff);
+          d=Math.round(d*rf(0.9,1.1)); if(cr)d=Math.round(d*1.5); e.hp-=d;
+        } else if(sk.kind==='setup'){ S.breakNext=true; }
+        else if(sk.kind==='stance'){ S.parry=true; }
+        else if(sk.kind==='buff'){ S.buffs.push({type:'atk',pct:sk.pct,turns:sk.turns}); }
+        else if(sk.kind==='debuff'){
+          const idx=e.edebuffs.findIndex(d=>d.stat===sk.stat);
+          if(idx>=0)e.edebuffs[idx]={stat:sk.stat,pct:sk.pct,turns:sk.turns};
+          else e.edebuffs.push({stat:sk.stat,pct:sk.pct,turns:sk.turns});
+        } else if(sk.kind==='ep'){ S.ep=Math.max(0,Math.min(100,S.ep+sk.val)); }
+      } else if(k==='item'){
+        const it=ITEMS[key]; if(S.energy<it.energy||S.items[key]<=0)break; S.energy-=it.energy; S.items[key]--;
+        if(it.effect==='hp') S.hp=Math.min(S.hpMax,S.hp+Math.round(S.hpMax*it.val));
+        else if(it.effect==='ep') S.ep=Math.max(0,Math.min(100,S.ep+it.val));
+        else if(it.effect==='mp') S.mp=Math.min(S.mpMax,S.mp+it.val);
+        else S.buffs.push({type:'atk',pct:it.pct,turns:it.turns});
+      }
+      if(e.hp<=0)return{result:'win',turns:S.turn};
     }
-    if(ended)return ended;
-    if(e.hp<=0)return 'win';
+    if(e.hp<=0)return{result:'win',turns:S.turn};
     // 敵手番
     const t=S.tele;
-    if(t.type==='phys'){ let d=Math.max(1,Math.round((e.atk*(t.sig?1.6:1)-defOf()*(t.sig?0.4:1))*(1-(PTOYS[G.ptoy].physRed||0)))); if(S.guard)d=Math.round(d*(t.sig?0.75:0.5)); if(S.parry){d=Math.round(d*0.5);e.hp-=Math.round(atkOf()*(0.6+(t.sig?0.4:0)));} S.hp-=d; }
-    else{ let g=e.ep*(t.sig?1.6:1); if(PTOYS[G.ptoy].epGain)g*=1+PTOYS[G.ptoy].epGain; if(ARMORS[G.armor].epres)g*=1-ARMORS[G.armor].epres; if(S.guard)g*=(t.sig?0.75:0.5); S.ep=Math.min(100,S.ep+Math.round(g)); }
-    if(PTOYS[G.ptoy].epTick)S.ep=Math.min(100,S.ep+PTOYS[G.ptoy].epTick);
-    S.buffs=S.buffs.map(b=>({...b,turns:b.turns-1})).filter(b=>b.turns>0); S.guard=false;S.parry=false;S.breakNext=false;S.nextBig=0; S.turn++;
-    if(e.hp<=0)return 'win'; if(S.hp<=0)return 'hp'; if(S.ep>=100)return 'ep';
-    tele(); S.energy=emx();
+    if(!e.noAttack){
+      if(t.type==='phys'){
+        let ad=e.edebuffs.find(d=>d.stat==='atk'); let atkDebuf=ad?ad.pct:0;
+        const atkEff=Math.round(e.atk*(1-atkDebuf));
+        let d=Math.max(1,Math.round((atkEff*(t.sig?1.6:1)-defOf()*(t.sig?0.4:1))));
+        const gc=guardCutOf();
+        if(S.guard)d=Math.round(d*(t.sig?0.75-gc:0.5-gc));
+        if(S.parry){d=Math.round(d*0.5);e.hp-=Math.round(atkOf()*(0.6+(t.sig?0.4:0)));}
+        S.hp-=d;
+      } else {
+        let g=e.ep*(t.sig?1.6:1);
+        if(simHasNode(nodes,'M9')) g*=1+0.10;
+        const gc=guardCutOf();
+        if(S.guard)g*=(t.sig?0.75-gc:0.5-gc);
+        g*=1-epresOf(); g=Math.round(g);
+        S.ep=Math.min(100,S.ep+g);
+      }
+    }
+    S.buffs=S.buffs.map(b=>({...b,turns:b.turns-1})).filter(b=>b.turns>0);
+    e.edebuffs=e.edebuffs.map(d=>({...d,turns:d.turns-1})).filter(d=>d.turns>0);
+    S.guard=false; S.parry=false; S.breakNext=false; S.nextBig=0; S.turn++;
+    // 不屈
+    if(S.hp<=0&&simHasNode(nodes,'G9')&&!S.undyingUsed){ S.hp=1; S.undyingUsed=true; }
+    if(e.hp<=0)return{result:'win',turns:S.turn};
+    if(S.hp<=0)return{result:'hp',turns:S.turn};
+    if(S.ep>=100)return{result:'ep',turns:S.turn};
+    teleF(); S.energyMax=emx(); S.energy=S.energyMax; S.attackedThisTurn=false; S.guardUsed=false;
   }
-  return e.hp<S.hp?'win':'hp';
+  return{result:e.hp<S.hp?'win':'hp',turns:S.turn};
 }
+
+// §6.4 simRun: 6階通し
+function simRun(ai, preset, ch){
+  const p=SIM_PRESETS[preset];
+  const nodes=p.nodes;
+  const wpn=WEAPONS[p.weapon], arm=ARMORS[p.armor];
+  const hpM=P_BASE.hp+simTreeSum(nodes,'hp');
+  const mpM=MP_BASE+simTreeSum(nodes,'mp');
+  let hp=hpM, ep=0, mp=mpM;
+  const mobs=CH_MOBS[ch]||CH_MOBS[1];
+  for(let fl=1;fl<=MAX_FLOOR;fl++){
+    const elite=ELITE_FLOORS.includes(fl);
+    const pool=elite?mobs.filter(m=>m!=='gold_slime'):mobs;
+    const key=pool[rint(0,pool.length-1)]||mobs[0];
+    const fmult=CH_MULT[ch-1]*(1+FLOOR_SCALE*(fl-1));
+    // MP戦闘開始回復
+    mp=Math.min(mpM, mp+MP_BATTLE_REGEN+simTreeSum(nodes,'mpRegen'));
+    const b=ENEMIES[key];
+    const ehp=Math.round(b.hp*CH_MULT[ch-1]*fmult*(elite?ELITE_HP:1));
+    const eatk=Math.round(b.atk*ATK_MULT[ch-1]*fmult*(elite?ELITE_ATK:1));
+    const eep=Math.round(b.ep*EP_MULT[ch-1]*fmult);
+    const edef=Math.round(b.def*DEF_MULT[ch-1]);
+    const e={key,name:b.name,boss:false,elite,hp:ehp,hpMax:ehp,atk:eatk,def:edef,ep:eep,phys:b.phys,noAttack:!!b.noAttack,fleeTurns:b.fleeTurns||0,edebuffs:[]};
+    const S={
+      hp,hpMax:hpM,ep,mp,mpMax:mpM,
+      energy:0,energyMax:0,guard:false,guardUsed:false,parry:false,breakNext:false,nextBig:0,
+      buffs:[],attackedThisTurn:false,undyingUsed:false,e,turn:1,tele:null,
+      items:{potion:2,holy:2,atk:1,mana:1},nodes,edebuffs:[]
+    };
+    const atkOf=()=>{
+      let a=P_BASE.atk+simTreeSum(nodes,'atk')+wpn.atk;
+      if(simHasNode(nodes,'M9')&&S.ep>=50) a*=1.20;
+      S.buffs.forEach(bf=>{if(bf.type==='atk')a*=1+bf.pct;});
+      return Math.round(a);
+    };
+    const defOf=()=>Math.round(P_BASE.def+simTreeSum(nodes,'def')+arm.def);
+    const emx=()=>Math.max(1,ENERGY_BASE+wpn.energy+arm.energy-Math.floor(S.ep/EP_ENERGY_DIV));
+    const critOf=()=>P_BASE.crit+simTreeSum(nodes,'crit');
+    const guardCutOf=()=>simTreeSum(nodes,'guardCut');
+    const epresOf=()=>arm.epres+simTreeSum(nodes,'epres');
+    const teleF=()=>{ const sig=false; const pr=Math.max(0.05,e.phys); S.tele={type:RNG()<pr?'phys':'lewd',sig}; };
+    teleF(); S.energyMax=emx(); S.energy=S.energyMax;
+    let dead=null;
+    let guard2=0;
+    while(guard2<500){
+      guard2++;
+      let acts=0;
+      while(acts<20){ acts++;
+        const [k,key2]=ai(S);
+        if(k==='end')break;
+        if(k==='attack'){
+          if(S.energy<ATTACK_COST)break; S.energy-=ATTACK_COST;
+          let fs=1; if(!S.attackedThisTurn&&simHasNode(nodes,'S7'))fs=1.30;
+          S.attackedThisTurn=true;
+          let cr=RNG()<critOf(),ig=false;
+          if(S.breakNext){ig=true;cr=true;S.breakNext=false;}
+          let dd2=e.edebuffs.find(d=>d.stat==='def'); let defDebuf=dd2?dd2.pct:0;
+          const defEff=Math.max(0,e.def*(1-defDebuf));
+          let exMult=1; if(simHasNode(nodes,'S8')&&e.hp<e.hpMax*0.30)exMult=1.25;
+          let d=Math.max(1,atkOf()*fs*exMult-(ig?0:defEff));
+          d=Math.round(d*rf(0.9,1.1)); if(cr)d=Math.round(d*1.5); e.hp-=d;
+        } else if(k==='guard'){
+          if(S.energy<GUARD_COST||S.guardUsed)break; S.energy-=GUARD_COST; S.guard=true; S.guardUsed=true;
+        } else if(k==='skill'){
+          const sk=SKILLS[key2]; if(S.energy<sk.energy||S.mp<sk.mp)break; S.energy-=sk.energy; S.mp-=sk.mp;
+          if(sk.kind==='attack'){
+            let dd2=e.edebuffs.find(d=>d.stat==='def'); let defDebuf=dd2?dd2.pct:0;
+            const defEff=Math.max(0,e.def*(1-defDebuf));
+            let exMult=1; if(simHasNode(nodes,'S8')&&e.hp<e.hpMax*0.30)exMult=1.25;
+            let cr=RNG()<critOf();
+            let d=Math.max(1,atkOf()*sk.mult*exMult-defEff);
+            d=Math.round(d*rf(0.9,1.1)); if(cr)d=Math.round(d*1.5); e.hp-=d;
+          } else if(sk.kind==='setup'){ S.breakNext=true; }
+          else if(sk.kind==='stance'){ S.parry=true; }
+          else if(sk.kind==='buff'){ S.buffs.push({type:'atk',pct:sk.pct,turns:sk.turns}); }
+          else if(sk.kind==='debuff'){
+            const idx=e.edebuffs.findIndex(d=>d.stat===sk.stat);
+            if(idx>=0)e.edebuffs[idx]={stat:sk.stat,pct:sk.pct,turns:sk.turns};
+            else e.edebuffs.push({stat:sk.stat,pct:sk.pct,turns:sk.turns});
+          } else if(sk.kind==='ep'){ S.ep=Math.max(0,Math.min(100,S.ep+sk.val)); }
+        } else if(k==='item'){
+          const it=ITEMS[key2]; if(S.energy<it.energy||S.items[key2]<=0)break; S.energy-=it.energy; S.items[key2]--;
+          if(it.effect==='hp') S.hp=Math.min(S.hpMax,S.hp+Math.round(S.hpMax*it.val));
+          else if(it.effect==='ep') S.ep=Math.max(0,Math.min(100,S.ep+it.val));
+          else if(it.effect==='mp') S.mp=Math.min(S.mpMax,S.mp+it.val);
+          else S.buffs.push({type:'atk',pct:it.pct,turns:it.turns});
+        }
+        if(e.hp<=0)break;
+      }
+      if(e.hp<=0)break;
+      const t=S.tele;
+      if(!e.noAttack){
+        if(t.type==='phys'){
+          let ad=e.edebuffs.find(d=>d.stat==='atk'); let atkDebuf=ad?ad.pct:0;
+          const atkEff=Math.round(e.atk*(1-atkDebuf));
+          let d=Math.max(1,Math.round((atkEff*(t.sig?1.6:1)-defOf()*(t.sig?0.4:1))));
+          const gc=guardCutOf();
+          if(S.guard)d=Math.round(d*(t.sig?0.75-gc:0.5-gc));
+          if(S.parry){d=Math.round(d*0.5);e.hp-=Math.round(atkOf()*(0.6+(t.sig?0.4:0)));}
+          S.hp-=d;
+        } else {
+          let g=e.ep*(t.sig?1.6:1);
+          const gc=guardCutOf();
+          if(S.guard)g*=(t.sig?0.75-gc:0.5-gc);
+          g*=1-epresOf(); g=Math.round(g);
+          S.ep=Math.min(100,S.ep+g);
+        }
+      }
+      S.buffs=S.buffs.map(b=>({...b,turns:b.turns-1})).filter(b=>b.turns>0);
+      e.edebuffs=e.edebuffs.map(d=>({...d,turns:d.turns-1})).filter(d=>d.turns>0);
+      S.guard=false; S.parry=false; S.breakNext=false; S.nextBig=0; S.turn++;
+      if(S.hp<=0&&simHasNode(nodes,'G9')&&!S.undyingUsed){ S.hp=1; S.undyingUsed=true; }
+      if(S.hp<=0){ dead='hp'; break; }
+      if(S.ep>=100){ dead='ep'; break; }
+      teleF(); S.energyMax=emx(); S.energy=S.energyMax; S.attackedThisTurn=false; S.guardUsed=false;
+    }
+    if(dead){ return{survived:false,floor:fl,cause:dead}; }
+    // 持ち越し
+    hp=S.hp; ep=S.ep; mp=S.mp;
+  }
+  return{survived:true,floor:MAX_FLOOR,cause:null};
+}
+
 function fillVerify(){ const sel=$('vEnemy'); if(sel.dataset.filled)return; sel.dataset.filled='1';
-  const list=[['bandit',1,'盗賊×1'],['tentacle',1.6,'触手 ボス雑魚(×1.6)'],['slime',1,'スライム(高DEF)'],['orc',1,'オーク長ボス'],['succubus',1,'堕神官ボス']];
-  sel.innerHTML=list.map((x,i)=>`<option value="${x[0]}|${x[1]}" ${i===1?'selected':''}>${x[2]}</option>`).join('');
+  // §6 の敵リストに更新
+  const list=[
+    ['bandit',1,1,'盗賊×ch1'],
+    ['tentacle',2,1,'触手蔦×ch2'],
+    ['tentacle_big',2,1,'大触手×ch2 elite'],
+    ['slime',1,1,'スライム×ch1'],
+    ['orc',1,1,'オーク長ボス'],
+    ['succubus',3,1,'堕神官ボス'],
+    ['demon',4,1,'魔人ボス'],
+  ];
+  sel.innerHTML=list.map((x,i)=>`<option value="${x[0]}|${x[1]}|${x[2]}" ${i===1?'selected':''}>${x[3]}</option>`).join('');
 }
-$('vBtn').addEventListener('click',()=>{ const [key,mult]=$('vEnemy').value.split('|'); const n=Math.max(20,Math.min(4000,+$('vN').value||500));
+
+$('vBtn').addEventListener('click',()=>{
+  const parts=$('vEnemy').value.split('|');
+  const enemyKey=parts[0], ch=+parts[1];
+  const n=Math.max(20,Math.min(4000,+$('vN').value||500));
+  const preset=$('vBuild').value;
+  const doRun=$('vRun').checked;
   $('simOut').textContent='実行中…';
-  setTimeout(()=>{ let sw=0,mw=0; for(let i=0;i<n;i++){ if(simOne(key,+mult,aiSpam)==='win')sw++; if(simOne(key,+mult,aiSmart)==='win')mw++; }
-    const sr=Math.round(sw/n*100),mr=Math.round(mw/n*100),d=mr-sr;
-    $('simOut').innerHTML=`敵=${ENEMIES[key].name}×${mult}  Lv${G.lv} ${WEAPONS[G.weapon].name}/${ARMORS[G.armor].name} ${PTOYS[G.ptoy].name}  ${n}戦\n\n  攻撃連打AI: 勝率 <span class="k">${sr}%</span>\n  賢いAI    : 勝率 <span class="k">${mr}%</span>\n\n  → ${d>=8?`<span class="good">賢い＞連打(+${d}pt)= リソース管理に意味あり=殴り合いを脱している ✓</span>`:`ほぼ互角(${d>=0?'+':''}${d}pt)= この条件では差が小さい`}`;
+  setTimeout(()=>{
+    const ais=[aiSpam_v3, aiSkillSpam_v3, aiSmart_v3];
+    const aiNames=['連打AI','MP垂れ流しAI','賢いAI'];
+    const fmult=CH_MULT[ch-1];
+
+    let out=`敵=${ENEMIES[enemyKey].name}  ch${ch}  ビルド=${preset}  ${n}戦\n\n`;
+    const results=[];
+    ais.forEach((ai,i)=>{
+      let win=0, totalTurns=0, ep=0, hp=0;
+      for(let j=0;j<n;j++){
+        const r=simOne_v3(enemyKey,ch,fmult,false,ai,preset);
+        if(r.result==='win'){win++;totalTurns+=r.turns;}
+        else if(r.result==='ep')ep++;
+        else hp++;
+      }
+      const wr=Math.round(win/n*100);
+      const avgT=win>0?Math.round(totalTurns*10/win)/10:'−';
+      results.push(wr);
+      out+=`  ${aiNames[i].padEnd(16)}: 勝率 ${String(wr+'%').padStart(4)}  平均${avgT}T  EP敗北${Math.round(ep/n*100)}%\n`;
+    });
+    const d1=results[2]-results[0], d2=results[2]-results[1];
+    out+=`\n  賢い−連打: ${d1>=8?`+${d1}pt ✓ (≥8pt=OK)`:d1>=0?`+${d1}pt (やや小さい)`:d1+'pt'}\n`;
+    out+=`  賢い−MP垂れ: ${d2>=5?`+${d2}pt ✓`:d2+'pt'}\n`;
+
+    if(doRun){
+      out+='\n── run検証(6階通し) ──\n';
+      const runAis=[aiSpam_v3, aiSkillSpam_v3, aiSmart_v3];
+      runAis.forEach((ai,i)=>{
+        let surv=0, epD=0, hpD=0;
+        for(let j=0;j<n;j++){
+          const r=simRun(ai,preset,ch);
+          if(r.survived)surv++;
+          else if(r.cause==='ep')epD++;
+          else hpD++;
+        }
+        const sr=Math.round(surv/n*100);
+        out+=`  ${aiNames[i].padEnd(16)}: 生還率 ${String(sr+'%').padStart(4)}  EP敗北${Math.round(epD/n*100)}%  HP敗北${Math.round(hpD/n*100)}%\n`;
+      });
+    }
+
+    $('simOut').innerHTML=out.replace(/✓/g,'<span class="good">✓</span>').replace(/\d+%/g,m=>`<span class="k">${m}</span>`);
   },30);
 });
 $('newBtn').addEventListener('click',newGame);
