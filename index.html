@@ -157,36 +157,37 @@ const SKILLS={
 };
 
 // ═══════════════════════ §2.3 TREE(26ノード) ═══════════════════════
+// ★v3.2 コスト曲線=序盤安く・後半高く(tier1-2=1 / tier3=2 / tier4=3 / tier5=4)。総54SP・クリア想定23SP(≈43%)。
 const TREE={
-  // 剣の道(火力) 14SP
+  // 剣の道(火力) 16SP
   S1:{name:'腕力 I',    br:'sword', tier:1, cost:1, req:[],          eff:{atk:4},  note:'ATK+4'},
-  S2:{name:'技:強撃',   br:'sword', tier:2, cost:2, req:['S1'],      eff:{skill:'strike'}, note:'スキル「強撃」を習得'},
+  S2:{name:'技:強撃',   br:'sword', tier:2, cost:1, req:['S1'],      eff:{skill:'strike'}, note:'スキル「強撃」を習得'},
   S3:{name:'腕力 II',   br:'sword', tier:2, cost:1, req:['S1'],      eff:{atk:6},  note:'ATK+6'},
-  S4:{name:'会心',      br:'sword', tier:3, cost:1, req:['S3'],      eff:{crit:0.06}, note:'クリティカル率+6%'},
+  S4:{name:'会心',      br:'sword', tier:3, cost:2, req:['S3'],      eff:{crit:0.06}, note:'クリティカル率+6%'},
   S5:{name:'技:崩し',   br:'sword', tier:3, cost:2, req:['S2'],      eff:{skill:'crush'}, note:'スキル「崩し」を習得'},
   S6:{name:'腕力 III',  br:'sword', tier:3, cost:2, req:['S3'],      eff:{atk:8},  note:'ATK+8'},
-  S7:{name:'初撃の冴え',br:'sword', tier:4, cost:2, req:['S6'],      eff:{firstStrike:0.30}, note:'毎ターン最初の「攻撃」+30%'},
-  S8:{name:'処刑人',    br:'sword', tier:5, cost:3, req:['S5','S7'], reqMode:'any', eff:{execute:0.25}, note:'敵HP30%未満に与ダメ+25%'},
-  // 体の道(生存) 15SP
+  S7:{name:'初撃の冴え',br:'sword', tier:4, cost:3, req:['S6'],      eff:{firstStrike:0.30}, note:'毎ターン最初の「攻撃」+30%'},
+  S8:{name:'処刑人',    br:'sword', tier:5, cost:4, req:['S5','S7'], reqMode:'any', eff:{execute:0.25}, note:'敵HP30%未満に与ダメ+25%'},
+  // 体の道(生存) 19SP
   G1:{name:'体力 I',    br:'guard', tier:1, cost:1, req:[],          eff:{hp:12},  note:'HP+12'},
   G2:{name:'守り I',    br:'guard', tier:2, cost:1, req:['G1'],      eff:{def:3},  note:'DEF+3'},
   G3:{name:'体力 II',   br:'guard', tier:2, cost:1, req:['G1'],      eff:{hp:14},  note:'HP+14'},
   G4:{name:'鉄壁',      br:'guard', tier:3, cost:2, req:['G2'],      eff:{guardCut:0.15}, note:'防御の軽減 50%→65%(大技25%→40%)'},
-  G5:{name:'守り II',   br:'guard', tier:3, cost:1, req:['G2'],      eff:{def:4},  note:'DEF+4'},
+  G5:{name:'守り II',   br:'guard', tier:3, cost:2, req:['G2'],      eff:{def:4},  note:'DEF+4'},
   G6:{name:'体力 III',  br:'guard', tier:3, cost:2, req:['G3'],      eff:{hp:18},  note:'HP+18'},
-  G7:{name:'技:見切り', br:'guard', tier:4, cost:2, req:['G4'],      eff:{skill:'parry'}, note:'スキル「見切り」を習得'},
-  G8:{name:'平静',      br:'guard', tier:4, cost:2, req:['G5'],      eff:{epres:0.20}, note:'被EP-20%(防具と乗算)'},
-  G9:{name:'不屈',      br:'guard', tier:5, cost:3, req:['G6'],      eff:{undying:true}, note:'1戦闘1回、致死ダメージをHP1で耐える'},
-  // 心の道(MP・バフ/デバフ) 17SP
+  G7:{name:'技:見切り', br:'guard', tier:4, cost:3, req:['G4'],      eff:{skill:'parry'}, note:'スキル「見切り」を習得'},
+  G8:{name:'平静',      br:'guard', tier:4, cost:3, req:['G5'],      eff:{epres:0.20}, note:'被EP-20%(防具と乗算)'},
+  G9:{name:'不屈',      br:'guard', tier:5, cost:4, req:['G6'],      eff:{undying:true}, note:'1戦闘1回、致死ダメージをHP1で耐える'},
+  // 心の道(MP・バフ/デバフ) 19SP
   M1:{name:'気力 I',    br:'mind', tier:1, cost:1, req:[],           eff:{mp:8},   note:'最大MP+8'},
-  M2:{name:'技:集中',   br:'mind', tier:2, cost:2, req:['M1'],       eff:{skill:'focus'}, note:'スキル「集中」を習得'},
+  M2:{name:'技:集中',   br:'mind', tier:2, cost:1, req:['M1'],       eff:{skill:'focus'}, note:'スキル「集中」を習得'},
   M3:{name:'気力 II',   br:'mind', tier:2, cost:1, req:['M1'],       eff:{mp:10},  note:'最大MP+10'},
   M4:{name:'技:威圧',   br:'mind', tier:3, cost:2, req:['M2'],       eff:{skill:'menace'}, note:'スキル「威圧」を習得'},
   M5:{name:'技:弱点看破',br:'mind', tier:3, cost:2, req:['M2'],      eff:{skill:'expose'}, note:'スキル「弱点看破」を習得'},
   M6:{name:'技:深呼吸', br:'mind', tier:3, cost:2, req:['M3'],       eff:{skill:'breath'}, note:'スキル「深呼吸」を習得'},
-  M7:{name:'気力 III',  br:'mind', tier:4, cost:2, req:['M3'],       eff:{mp:12},  note:'最大MP+12'},
-  M8:{name:'静心',      br:'mind', tier:4, cost:2, req:['M7'],       eff:{mpRegen:6}, note:'戦闘開始時MP回復 +6(基礎3→9)'},
-  M9:{name:'高揚',      br:'mind', tier:5, cost:3, req:['M4','M5','M6'], reqMode:'any', eff:{arousal:{ep:50,atk:0.20,epGainUp:0.10}}, note:'EP50以上でATK+20%・ただし被EP+10%'},
+  M7:{name:'気力 III',  br:'mind', tier:4, cost:3, req:['M3'],       eff:{mp:12},  note:'最大MP+12'},
+  M8:{name:'静心',      br:'mind', tier:4, cost:3, req:['M7'],       eff:{mpRegen:6}, note:'戦闘開始時MP回復 +6(基礎3→9)'},
+  M9:{name:'高揚',      br:'mind', tier:5, cost:4, req:['M4','M5','M6'], reqMode:'any', eff:{arousal:{ep:50,atk:0.20,epGainUp:0.10}}, note:'EP50以上でATK+20%・ただし被EP+10%'},
 };
 
 // §2.7 汎用振り順
@@ -209,17 +210,19 @@ const DEF_MULT=[1.0, 1.15, 1.3,  1.45];
 // ★v3.1 バランス調整(2026-07-13 Opusのオート対戦検証で確定)。設計§2.5の【仮】値はEP/floor/章倍率の重畳で
 //   エリート・EPボスが絶頂の壁、魔人がHPの壁だった。ep一律×0.60(round)、succubus/大触手/魔人のHP・魔人atkを下方修正。
 //   実測: 雑魚2-3T / エリート大触手5F 60%勝(gap+56) / 堕神官98%13T / 魔人100%13T(gap+35)。設計の±20%を超える調整あり(§2.6手順に沿う)。
+// ★v3.2 敵HP下方修正(序盤=素殴り2-3手番へ)。moves=行動プロファイル(敵ごとに個性。boss は4T毎に大技sig優先)。
+// 行動タイプ: phys(物理)/lewd(猥褻EP)/flurry(2連撃)/bind(拘束=EP+次の行動力減)/weaken(衰弱=攻撃力↓)/charm(魅了=行動不能)
 const ENEMIES={
-  bandit:      {name:'盗賊',      hp:100, atk:12, def:2,  ep:5,  phys:0.72, exp:10},
-  brigand:     {name:'追い剥ぎ',  hp:115, atk:13, def:3,  ep:6,  phys:0.68, exp:11},
-  slime:       {name:'スライム',  hp:105, atk:8,  def:6,  ep:7,  phys:0.30, exp:10},
-  gold_slime:  {name:'金スライム',hp:150, atk:0,  def:12, ep:0,  phys:0,    exp:30, noAttack:true, fleeTurns:6, goldReward:[500,800]},
-  tentacle:    {name:'触手蔦',    hp:150, atk:6,  def:3,  ep:8,  phys:0.16, exp:12},
-  tentacle_big:{name:'大触手',    hp:155, atk:8,  def:4,  ep:9,  phys:0.15, exp:15},
-  orc:         {name:'オーク長',  hp:480, atk:24, def:7,  ep:7,  phys:0.72, exp:60,  boss:true},
-  flower:      {name:'食虫花の主',hp:480, atk:16, def:8,  ep:10, phys:0.35, exp:90,  boss:true},
-  succubus:    {name:'堕神官',    hp:410, atk:14, def:8,  ep:10, phys:0.28, exp:130, boss:true, charm:0.15},
-  demon:       {name:'迷宮の魔人',hp:290, atk:16, def:11, ep:9,  phys:0.58, exp:200, boss:true},
+  bandit:      {name:'盗賊',      hp:52,  atk:12, def:2,  ep:5,  phys:0.72, exp:10, moves:['phys','phys','flurry']},
+  brigand:     {name:'追い剥ぎ',  hp:56,  atk:13, def:3,  ep:6,  phys:0.68, exp:11, moves:['phys','phys','weaken']},
+  slime:       {name:'スライム',  hp:56,  atk:8,  def:4,  ep:7,  phys:0.30, exp:10, moves:['lewd','weaken','phys']},
+  gold_slime:  {name:'金スライム',hp:150, atk:0,  def:12, ep:0,  phys:0,    exp:30, noAttack:true, fleeTurns:6, goldReward:[500,800], moves:['phys']},
+  tentacle:    {name:'触手蔦',    hp:130, atk:6,  def:3,  ep:8,  phys:0.16, exp:12, moves:['lewd','lewd','bind']},
+  tentacle_big:{name:'大触手',    hp:115, atk:8,  def:4,  ep:9,  phys:0.15, exp:15, moves:['lewd','bind','weaken']},
+  orc:         {name:'オーク長',  hp:420, atk:24, def:7,  ep:7,  phys:0.72, exp:60,  boss:true, moves:['phys','flurry','phys']},
+  flower:      {name:'食虫花の主',hp:420, atk:16, def:8,  ep:10, phys:0.35, exp:90,  boss:true, moves:['lewd','weaken','lewd']},
+  succubus:    {name:'堕神官',    hp:400, atk:14, def:8,  ep:10, phys:0.28, exp:130, boss:true, charm:0.15, moves:['lewd','charm','lewd']},
+  demon:       {name:'迷宮の魔人',hp:255, atk:16, def:11, ep:9,  phys:0.58, exp:200, boss:true, moves:['phys','bind','flurry']},
 };
 const CH_MOBS={1:['bandit','brigand','slime','gold_slime'],2:['tentacle','tentacle_big'],3:['bandit','brigand'],4:['slime','gold_slime','tentacle','tentacle_big']};
 const CH_BOSS={1:'orc',2:'flower',3:'succubus',4:'demon'};
@@ -282,6 +285,7 @@ function pAtk(){
   // 高揚: M9 + EP>=50
   if(hasNode('M9') && G.ep>=50) a*=1.20;
   if(G.bt&&G.bt.buffs) G.bt.buffs.forEach(b=>{ if(b.type==='atk')a*=1+b.pct; });
+  if(G.bt&&G.bt.pdebuffs) G.bt.pdebuffs.forEach(d=>{ if(d.stat==='atk')a*=1-d.pct; });   // 衰弱
   return Math.round(a);
 }
 function pDef(){
@@ -339,7 +343,8 @@ function startBattle(enemyKey, ch, floorMult, elite, ctx){
     enemy:e, turn:1, energy:0, energyMax:0,
     guard:false, guardUsed:false,
     parry:false, breakNext:false, nextBig:0,
-    buffs:[], attackedThisTurn:false,
+    buffs:[], pdebuffs:[], attackedThisTurn:false,
+    boundNext:0, charmed:false, charmedNext:false,
     undyingUsed:false, tele:null
   };
   G.ctx=ctx; G.screen='battle';
@@ -348,16 +353,25 @@ function startBattle(enemyKey, ch, floorMult, elite, ctx){
   render();
 }
 
-// §5-3 startTurn: energyMaxスナップショット
+// §5-3 startTurn: energyMaxスナップショット + 拘束(boundNext) + 魅了(charmedNext)反映
 function startTurn(){
   const bt=G.bt;
-  bt.energyMax = eMax();
+  bt.energyMax = Math.max(1, eMax() - (bt.boundNext||0));   // 拘束=次手番の行動力減
+  bt.boundNext = 0;
   bt.energy    = bt.energyMax;
   bt.guardUsed = false;
   bt.attackedThisTurn = false;
+  bt.charmed = !!bt.charmedNext;   // 魅了=この手番は行動不能(ターン終了のみ)
+  bt.charmedNext = false;
 }
-function newTele(){ const e=G.bt.enemy; const sig=e.boss&&G.bt.turn%4===0; const physR=Math.max(0.05,e.phys-0.12*(G.ptoy!=='none'?1:0)); G.bt.tele={type:RNG()<physR?'phys':'lewd',sig}; }
-function teleText(){ const t=G.bt.tele; if(!t)return ''; if(t.sig)return '★大技の予兆……身構えろ!'; return t.type==='phys'?'次:斬りかかる構え(物理)':'次:妖しく身をよじる(猥褻・EP↑)'; }
+function newTele(){ const e=G.bt.enemy;
+  if(e.boss && G.bt.turn%4===0){ G.bt.tele={type:'sig'}; return; }   // ボスは4T毎に大技
+  const mv=e.moves||['phys']; G.bt.tele={type: mv[rint(0,mv.length-1)]};
+}
+const TELE_TEXT={ sig:'★大技の予兆……身構えろ!', phys:'次:斬りかかる構え(物理)', lewd:'次:妖しく身をよじる(猥褻・EP↑)',
+  flurry:'次:立て続けに斬りかかる構え(2連撃)', bind:'次:絡めとろうと蠢く(拘束=EP↑+次の行動力減)',
+  weaken:'次:妖しい霧を放とうとしている(衰弱=攻撃力↓)', charm:'次:とろけた眼差しで見つめる(魅了=行動不能の危険)' };
+function teleText(){ const t=G.bt.tele; return t?(TELE_TEXT[t.type]||''):''; }
 
 // ═══════════════════════ §5-8 canAct ═══════════════════════
 function canAct(kind,key){ const bt=G.bt;
@@ -467,43 +481,46 @@ function act(kind,key){ const bt=G.bt,e=bt.enemy; if(!canAct(kind,key))return fa
   return true;
 }
 
-// ═══════════════════════ §5-11 enemyTurn ═══════════════════════
+// ═══════════════════════ §5-11 enemyTurn + 行動タイプ解決ヘルパ(v3.2) ═══════════════════════
+// 敵の物理1発を解決。mult=倍率 sig=大技。G.hpを削り与ダメを返す。見切り(parry)は1回だけ消費。
+function _physHit(e, mult, sig){
+  let atkDebuf=0; const ad=e.edebuffs.find(d=>d.stat==='atk'); if(ad)atkDebuf=ad.pct;
+  const atkEff=Math.round(e.atk*ATK_MULT[G.chapter-1]*(e.elite?ELITE_ATK:1)*(1-atkDebuf));
+  let d=Math.max(1,Math.round((atkEff*mult*(sig?1.6:1)-pDef()*(sig?0.4:1))*(1-(PTOYS[G.ptoy].physRed||0))));
+  const gc=treeGuardCut();
+  if(G.bt.guard)d=Math.round(d*(sig?0.75-gc:0.5-gc));
+  if(G.bt.parry){ d=Math.round(d*0.5); const c=Math.round(pAtk()*(0.6+(sig?0.4:0))); e.hp=Math.max(0,e.hp-c); log('見切って反撃! '+c+' を返した','s'); G.bt.parry=false; }
+  G.hp=Math.max(0,G.hp-d); return d;
+}
+// 敵の猥褻1発を解決。EP上昇量を返す。
+function _epHit(e, mult, sig){
+  let g=e.ep*mult*(sig?1.6:1);
+  if(PTOYS[G.ptoy].epGain) g*=1+PTOYS[G.ptoy].epGain;
+  if(ARMORS[G.armor].epres) g*=1-ARMORS[G.armor].epres;
+  if(treeEpRes()>0) g*=1-treeEpRes();
+  if(hasNode('M9')) g*=1.10;   // 高揚: 被EP+10%
+  const gc=treeGuardCut(); if(G.bt.guard)g*=(sig?0.75-gc:0.5-gc);
+  g=Math.max(1,Math.round(g)); addEP(g); return g;
+}
+// プレイヤーへのデバフ(衰弱=atk↓)。同statは上書き。
+function applyPDebuff(stat,pct,turns){ const a=G.bt.pdebuffs; const ex=a.find(d=>d.stat===stat); if(ex){ex.pct=pct;ex.turns=turns;} else a.push({stat,pct,turns}); }
+
 function enemyTurn(){ const bt=G.bt,e=bt.enemy,t=bt.tele;
   if(e.fleeTurns && bt.turn>=e.fleeTurns){ log(e.name+'は跳ねて逃げ出した! 取り逃した…','dim'); endBattle('fled'); return; }
   if(e.noAttack){ log(e.name+'は、ぷるぷる震えているだけだ','dim'); }
-  else if(t.type==='phys'){
-    // atkデバフ
-    let atkDebuf=0; const ad=e.edebuffs.find(d=>d.stat==='atk'); if(ad)atkDebuf=ad.pct;
-    const atkEff=Math.round(e.atk * ATK_MULT[G.chapter-1] * (e.elite?ELITE_ATK:1) * (1-atkDebuf));
-    let d=Math.max(1,Math.round((atkEff*(t.sig?1.6:1)-pDef()*(t.sig?0.4:1))*(1-(PTOYS[G.ptoy].physRed||0))));
-    const gc=treeGuardCut();
-    if(bt.guard)d=Math.round(d*(t.sig?0.75-gc:0.5-gc));
-    if(bt.parry){
-      d=Math.round(d*0.5);
-      const c=Math.round(pAtk()*(0.6+(t.sig?0.4:0)));
-      e.hp=Math.max(0,e.hp-c);
-      log('見切って反撃! '+c+' を返した','s');
-    }
-    G.hp=Math.max(0,G.hp-d);
-    log((t.sig?'【大技】':'')+e.name+'の攻撃 → '+d+' ダメージ','w');
-  } else {
-    // EP式: enemy.ep × EP_MULT × fmult × (1+pierce) × (1-防具epres) × (1-ツリーepres) × (1+高揚被EP)
-    // ※ fmult はmkEnemy生成時にepに既に適用済み(ep=b.ep*EP_MULT*fmult)なのでここではそのまま使う
-    let g=e.ep*(t.sig?1.6:1);
-    if(PTOYS[G.ptoy].epGain) g*=1+PTOYS[G.ptoy].epGain;
-    if(ARMORS[G.armor].epres) g*=1-ARMORS[G.armor].epres;
-    if(treeEpRes()>0) g*=1-treeEpRes();
-    if(hasNode('M9')) g*=1+0.10; // 高揚被EP+10%
-    const gc=treeGuardCut();
-    if(bt.guard)g*=(t.sig?0.75-gc:0.5-gc);
-    g=Math.round(g); addEP(g);
-    log((t.sig?'【大技】':'')+e.name+'の猥褻な一撃 → EP+'+g,'e');
+  else { const ty=t.type;
+    if(ty==='sig'){ if(e.phys<0.5){ const g=_epHit(e,1,true); log('【大技】'+e.name+'の猥褻な大技 → EP+'+g,'e'); } else { const d=_physHit(e,1,true); log('【大技】'+e.name+'の一撃 → '+d+' ダメージ','w'); } }
+    else if(ty==='phys'){ const d=_physHit(e,1,false); log(e.name+'の攻撃 → '+d+' ダメージ','w'); }
+    else if(ty==='lewd'){ const g=_epHit(e,1,false); log(e.name+'の猥褻な一撃 → EP+'+g,'e'); }
+    else if(ty==='flurry'){ const d1=_physHit(e,0.62,false), d2=_physHit(e,0.62,false); log(e.name+'の2連撃 → '+d1+'+'+d2+' ダメージ','w'); }
+    else if(ty==='bind'){ const g=_epHit(e,0.75,false); bt.boundNext=3; log(e.name+'に絡めとられた! EP+'+g+'・次の行動力-3','e'); }
+    else if(ty==='weaken'){ const d=_physHit(e,0.35,false); applyPDebuff('atk',0.25,2); log(e.name+'の衰弱の霧… '+d+' ダメージ・攻撃力-25%(2T)','w'); }
+    else if(ty==='charm'){ const g=_epHit(e,0.85,false); if(G.ep>=35 && RNG()<0.55){ bt.charmedNext=true; log(e.name+'の魅了…! EP+'+g+'・次のターン動けない','e'); } else { log(e.name+'の誘惑 → EP+'+g,'e'); } }
   }
   // 常時淫具 epTick
   if(PTOYS[G.ptoy].epTick) addEP(PTOYS[G.ptoy].epTick);
-  // バフtick
   bt.buffs=bt.buffs.map(b=>({...b,turns:b.turns-1})).filter(b=>b.turns>0);
-  // 敵デバフtick
+  bt.pdebuffs=bt.pdebuffs.map(d=>({...d,turns:d.turns-1})).filter(d=>d.turns>0);
   e.edebuffs=e.edebuffs.map(d=>({...d,turns:d.turns-1})).filter(d=>d.turns>0);
   bt.guard=false; bt.parry=false; bt.breakNext=false; bt.nextBig=0; bt.turn++;
   // 不屈判定(HP<=0の前に挿入)
@@ -548,9 +565,8 @@ function onBattleEnd(result,e){
     else {
       addInran(result==='ep'?10:6);
       log('敗北('+(result==='ep'?'絶頂':'戦闘不能')+')。抱えた稼ぎ'+d.pool+'Gを失い、淫乱度+'+(result==='ep'?10:6)+'。日を跨いだ…','w');
-      G.dun=null; G.hp=Math.max(1,Math.round(hpMax()*0.5)); G.ep=0;
-      G.mp=mpMax(); // §7-11 敗北翌朝MP全快
-      dayToyUpkeep(); G.day++; toHub(result==='ep'?'絶頂敗北。翌朝、宿の天井を見上げる…':'戦闘不能。担がれて宿へ運ばれた…');
+      G.dun=null; dayToyUpkeep(); advanceDay();   // 敗北も翌日は全回復(1日で全快)
+      toHub(result==='ep'?'絶頂敗北。翌朝、目覚めれば体は回復している…':'戦闘不能。担がれ、翌朝には癒えていた…');
     }
   } else if(G.ctx==='boss'){
     if(result==='win'){ G.bossCleared=true; const bonus=Math.round((BOSS_G[G.chapter-1]+QUEST_G[G.chapter-1])*INCOME_MULT); G.gold+=bonus;
@@ -564,15 +580,16 @@ function dungeonAdvance(){ if(G.dun.floor>=MAX_FLOOR){ banked(); return; } G.dun
 function dungeonRetreat(){ banked(); }
 function banked(bank){ const d=G.dun; const g=(bank===0)?0:d.pool; G.gold+=g;
   if(g>0)log(d.floor+'階から帰還。稼ぎ '+g+'G を確定','g');
-  dayToyUpkeep(); G.dun=null; G.day++; toHub(g>0?'稼ぎ '+g+'G を持ち帰った。':'手ぶらで帰還。'); }
+  dayToyUpkeep(); G.dun=null; advanceDay(); toHub(g>0?'稼ぎ '+g+'G を持ち帰った。':'手ぶらで帰還。'); }
 function dayToyUpkeep(){
   let inr=0; [G.ptoy].forEach(k=>{if(k!=='none'&&PTOYS[k]){ inr+=PTOYS[k].inran||0; }});
   if(inr){ addInran(inr); } }
 function toHub(msg){ G.screen='hub'; G.bannerMsg=msg||''; checkChapterGate(); render(); }
 function checkChapterGate(){ }
 function morganWork(){ let best=MORGAN_WORK[0]; MORGAN_WORK.forEach(w=>{if(G.inran>=w[0])best=w;});
-  G.gold+=best[1]; addInran(best[2]); log('モルガンの「仕事」で +'+best[1]+'G(淫乱度+'+best[2]+')','g'); G.day++; toHub('モルガンで働いた。'); }
-function inn(){ G.hp=hpMax(); G.ep=0; G.mp=mpMax(); if(G.ptoy!=='none'){ addInran(1); } log('宿で休んだ(全回復)','dim'); G.day++; toHub('一晩休んだ。'); }
+  G.gold+=best[1]; addInran(best[2]); log('モルガンの「仕事」で +'+best[1]+'G(淫乱度+'+best[2]+')','g'); advanceDay(); toHub('モルガンで働いた。'); }
+// ★1日で全ステ全回復(宿を廃止・ユーザー要望v3.2)。日を進める全経路はこれを通す。
+function advanceDay(){ G.day++; G.hp=hpMax(); G.ep=0; G.mp=mpMax(); }
 function repaymentDay(){ const need=G.norma[G.chapter-1];
   if(G.gold>=need){ G.gold-=need; log('返済日: '+need+'G を納付。今月分クリア','g');
     if(G.chapter>=4){ endGame(); return; }
@@ -654,7 +671,6 @@ function hubHTML(){ const repayDay=G.day>=DAYS_PER_CHAPTER+1;
   }else{
     m+=`<button class="mbtn primary" data-a="dungeon"><span><b>◆ ダンジョンへ潜る</b><small>押し引きで稼ぐ。3・5階はボス雑魚(倒せば宝箱/負ければ淫乱↑)</small></span><span class="tagd">1日</span></button>`;
     m+=`<button class="mbtn" data-a="morgan"><span><b>◆ モルガンで働く</b><small>確実な即金。淫乱度が上がる</small></span><span class="tagd">1日</span></button>`;
-    m+=`<button class="mbtn" data-a="inn"><span><b>◆ 宿で休む</b><small>HP・MP全回復</small></span><span class="tagd">1日</span></button>`;
     m+=`<button class="mbtn" data-a="shop"><span><b>ショップ(モルガン商店)</b><small>装備・淫具・道具を買う</small></span></button>`;
   }
   // ツリーボタン常設(日は進まない)
@@ -699,7 +715,7 @@ function treeHTML(){
   return `<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
     <h2>スキルツリー — SP残り ${G.sp}</h2>
     <div style="display:flex;gap:8px">${respecBtn}<button class="btn go" data-a="closetree">戻る</button></div></div>
-    <div class="desc">取得ノード ${G.nodes.length}/26  総コスト46SP  クリア想定SP≈23〜25(50%)</div>
+    <div class="desc">取得ノード ${G.nodes.length}/26  総コスト54SP(序盤安く後半高く)  クリア想定SP≈23(≈43%)</div>
     <div class="tree-grid">${cols}</div></div>`;
 }
 
@@ -730,7 +746,9 @@ function pipHTML(){
   }
   return s;
 }
-function buffHTML(){ const bt=G.bt,b=[]; bt.buffs.forEach(x=>b.push('攻撃+'+Math.round(x.pct*100)+'%('+x.turns+'T)')); if(bt.breakNext)b.push('崩し'); if(bt.nextBig)b.push('次撃+'+Math.round(bt.nextBig*100)+'%'); if(bt.parry)b.push('見切り'); if(bt.guard)b.push('防御'); return b.length?'◆ '+b.join(' / '):''; }
+function buffHTML(){ const bt=G.bt,b=[]; bt.buffs.forEach(x=>b.push('攻撃+'+Math.round(x.pct*100)+'%('+x.turns+'T)')); if(bt.breakNext)b.push('崩し'); if(bt.nextBig)b.push('次撃+'+Math.round(bt.nextBig*100)+'%'); if(bt.parry)b.push('見切り'); if(bt.guard)b.push('防御');
+  const bad=[]; if(bt.pdebuffs)bt.pdebuffs.forEach(d=>bad.push('攻撃-'+Math.round(d.pct*100)+'%('+d.turns+'T)')); if(bt.boundNext)bad.push('拘束(次-'+bt.boundNext+'⚡)');
+  let s=b.length?'◆ '+b.join(' / '):''; if(bad.length)s+=(s?'　':'')+'<span style="color:var(--warn)">⚠ '+bad.join(' / ')+'</span>'; return s; }
 function edebuffsHTML(){ const e=G.bt.enemy; if(!e.edebuffs||e.edebuffs.length===0)return ''; return '▼ '+e.edebuffs.map(d=>(d.stat==='atk'?'ATK':'DEF')+'-'+Math.round(d.pct*100)+'%('+d.turns+'T)').join(' / '); }
 
 function battleHTML(){ const bt=G.bt,e=bt.enemy;
@@ -760,13 +778,15 @@ function battleHTML(){ const bt=G.bt,e=bt.enemy;
     <div class="card enemy"><div class="who"><b>${e.name}</b><span class="lv">${e.boss?'BOSS':(e.elite?'ELITE':'敵')}</span></div>
       <div class="g hp"><div class="glabel"><span>HP</span><span>${e.hp}/${e.hpMax}</span></div><div class="bar"><i style="width:${bar(e.hp,e.hpMax)}%"></i></div></div>
       ${edeb?`<div class="edebuffs">${edeb}</div>`:'<div class="edebuffs"></div>'}
-      <div class="tele ${bt.tele&&(bt.tele.sig||bt.tele.type==='lewd')?'':'calm'}">${teleText()}</div></div></div>
-    <div class="actions"><div class="actrow">
+      <div class="tele ${bt.tele&&bt.tele.type!=='phys'?'':'calm'}">${teleText()}</div></div></div>
+    <div class="actions"><div class="actrow">${ bt.charmed ? `
+      <span style="color:var(--ep);font-weight:700">♥ 魅了されて動けない……このターンは何もできない</span>
+      <div class="endbar"><button class="btn go" data-k="end">ターン終了 ▶</button></div>` : `
       <button class="act primary" data-k="attack" ${en('attack')?'disabled':''}>攻撃<span class="c">${ATTACK_COST}⚡</span></button>
       <button class="act" data-sub="skill">スキル<div class="sub">${skills}</div></button>
       <button class="act" data-k="guard" ${en('guard')?'disabled':''}>防御<span class="c">${GUARD_COST}⚡</span></button>
       <button class="act" data-sub="item">どうぐ<span class="c">2⚡</span><div class="sub">${items}<div style="border-top:1px solid var(--line);margin:5px 2px"></div>${atoy}</div></button>
-      <div class="endbar"><span class="hint">残り行動力の範囲で何回でも</span><button class="btn go" data-k="end">ターン終了 ▶</button></div>
+      <div class="endbar"><span class="hint">残り行動力の範囲で何回でも</span><button class="btn go" data-k="end">ターン終了 ▶</button></div>`}
     </div></div>`;
 }
 function renderLog(){ const el=$('log'); el.innerHTML=G.log.slice(-70).map(([t,c])=>`<div><span class="${c}">${t}</span></div>`).join(''); el.scrollTop=el.scrollHeight; }
@@ -799,7 +819,6 @@ document.addEventListener('click',ev=>{ if(!ev.target.closest('[data-sub]')&&!ev
 function handleAction(a){
   if(a==='dungeon')enterDungeon();
   else if(a==='morgan')morganWork();
-  else if(a==='inn')inn();
   else if(a==='shop'){G.screen='shop';render();}
   else if(a==='closeshop'){G.screen='hub';render();}
   else if(a==='advance')dungeonAdvance();
@@ -824,11 +843,14 @@ function doEquip(spec){ const [slot,key]=spec.split(':'); if(slot==='ptoy')G.pto
 // ═══════════════════════ §5-15 検証ハーネス v3 ═══════════════════════
 
 // ビルドプリセット(§6.2)
+// SP予算ぶんだけ汎用順に取る(新コスト曲線でオンカーブに保つ)。SP = 3 + 2*(lv-1)。
+function nodesForSP(sp){ const out=[]; let rem=sp; for(const id of GENERIC_BUILD_ORDER){ const c=TREE[id].cost; if(c<=rem){out.push(id);rem-=c;} else break; } return out; }
 const SIM_PRESETS={
-  P1:  {lv:2,  weapon:'old',    armor:'travel',  nodes:['S1','G1','S2']},
-  P2:  {lv:5,  weapon:'iron',   armor:'leather', nodes:GENERIC_BUILD_ORDER.slice(0,11)},
-  P3:  {lv:8,  weapon:'knight', armor:'leather', nodes:GENERIC_BUILD_ORDER.slice(0,17)},
-  P4:  {lv:11, weapon:'knight', armor:'plate',   nodes:GENERIC_BUILD_ORDER.slice(0,23)},
+  P0:  {lv:1,  weapon:'old',    armor:'travel',  nodes:[]},                       // ★真の序盤(古剣・素・0ノード)
+  P1:  {lv:2,  weapon:'old',    armor:'travel',  nodes:nodesForSP(5)},
+  P2:  {lv:5,  weapon:'iron',   armor:'leather', nodes:nodesForSP(11)},
+  P3:  {lv:8,  weapon:'knight', armor:'leather', nodes:nodesForSP(17)},
+  P4:  {lv:11, weapon:'knight', armor:'plate',   nodes:nodesForSP(23)},
   BUILD_SWORD:{lv:8,weapon:'knight',armor:'leather',nodes:['S1','S2','S3','S4','S5','S6','S7','S8','G1','M1','G3']},
   BUILD_GUARD:{lv:8,weapon:'knight',armor:'leather',nodes:['G1','G2','G3','G4','G5','G6','G7','G8','G9','S1','M1']},
   BUILD_MIND: {lv:8,weapon:'knight',armor:'leather',nodes:['M1','M2','M3','M4','M5','M6','M7','M8','M9']},
