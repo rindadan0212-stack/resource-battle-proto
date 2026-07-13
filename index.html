@@ -75,6 +75,9 @@
   .srow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0e1017;border:1px solid var(--line);border-radius:7px;padding:9px 12px}
   .srow .n b{font-size:13px} .srow .n small{color:var(--sub);display:block;font-size:11px}
   .srow.owned{opacity:.5} .srow .price{font:700 12px var(--mono);color:var(--gold)}
+  .srow.upsel{opacity:1;border-color:#4a4326} .uplv{color:var(--gold);font:700 11px var(--mono)}
+  .eqp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .btn.upg{padding:6px 10px;border-color:#4a4326;color:var(--gold)} .btn.upg:hover:not(:disabled){background:#211c0e} .btn.upg small{color:var(--sub);font-weight:600}
   table.stat{font:12px var(--mono);border-collapse:collapse} table.stat td{padding:2px 12px 2px 0;color:var(--sub)} table.stat td b{color:var(--ink)}
   /* ツリー画面 */
   .tree-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
@@ -258,6 +261,12 @@ const ATOYS={ none:{name:'なし',cost:0},
   crest:{name:'淫紋のピアス',cost:2500,energy:2,epCost:18,effect:'nextbig',pct:1.0,inran:2,note:'次撃+100%/使用EP+18'},
   scepter:{name:'淫魔の杖',cost:2600,energy:2,epCost:26,effect:'atkbuff',pct:0.60,turns:2,inran:2,note:'攻撃+60%(2T)/使用EP+26'} };
 
+// ★武具強化(v3.4=金で今の装備を鍛える)。武器/防具の"キーごと"に+levelを蓄積 → 乗り換えると投資を失う駆け引き。
+// 序盤安く後半高く+高tierほど高い(baseCost比例)= 安い剣を鍛える自力路線 と 高い剣を買って更に鍛える豪華路線 の両立。
+const UPG_MAX=5, UPG_ATK=2, UPG_DEF=2;
+function upgLv(slot,key){ const m=slot==='weapon'?G.wUpg:G.aUpg; return (m&&m[key])||0; }
+function upgCostNext(slot,key){ const base=(slot==='weapon'?WEAPONS[key].cost:ARMORS[key].cost); const lv=upgLv(slot,key); return Math.round((base*0.3+100)*(lv+1)); }
+
 // §2.8 ITEMS(v3.3拡張=金で戦闘を楽にする層を厚く。使う=返済金が減る駆け引き)
 const ITEMS={ potion:{name:'ポーション',cost:80, energy:2,effect:'hp', val:0.5, note:'HP50%回復'},
   strongpot:{name:'上薬',  cost:220,energy:2,effect:'hp', val:0.85,note:'HP85%回復'},
@@ -276,6 +285,7 @@ function newGame(){
     lv:1, exp:0, hp:P_BASE.hp, ep:0, mp:MP_BASE, inran:0,
     sp:SP_START, nodes:[],
     weapon:'old', armor:'travel', accessory:'none', ptoy:'none', atoy:'none',
+    wUpg:{}, aUpg:{},
     items:{potion:0,strongpot:0,holy:0,calm:0,atk:0,guardpot:0,mana:0,cure:0,elixir:0}, toysOwned:[],
     bossCleared:false, log:[['── 迷宮都市グランデル。借金 45,450G を返すため、剣を手に潜る。','t']],
     dun:null, bt:null, ctx:null, over:null };
@@ -299,7 +309,7 @@ function skillKnown(k){ return G.nodes.includes(SKILLS[k].node); }
 function hpMax(){ return P_BASE.hp + treeSum('hp'); }
 function mpMax(){ return MP_BASE + treeSum('mp') + accEff('mp'); }
 function pAtk(){
-  let a = P_BASE.atk + treeSum('atk') + WEAPONS[G.weapon].atk + accEff('atk');
+  let a = P_BASE.atk + treeSum('atk') + WEAPONS[G.weapon].atk + upgLv('weapon',G.weapon)*UPG_ATK + accEff('atk');
   const pt=PTOYS[G.ptoy]; if(pt.atkPct)a*=1+pt.atkPct;
   // 高揚: M9 + EP>=50
   if(hasNode('M9') && G.ep>=50) a*=1.20;
@@ -308,7 +318,7 @@ function pAtk(){
   return Math.round(a);
 }
 function pDef(){
-  let d = P_BASE.def + treeSum('def') + ARMORS[G.armor].def + accEff('def');
+  let d = P_BASE.def + treeSum('def') + ARMORS[G.armor].def + upgLv('armor',G.armor)*UPG_DEF + accEff('def');
   const pt=PTOYS[G.ptoy]; if(pt.defPct)d*=1+pt.defPct;
   if(G.bt&&G.bt.buffs) G.bt.buffs.forEach(b=>{ if(b.type==='def')d*=1+b.pct; });   // 硬化薬
   return Math.round(d);
@@ -707,7 +717,7 @@ function hubHTML(){ const repayDay=G.day>=DAYS_PER_CHAPTER+1;
 }
 function statTable(){ return `<table class="stat"><tr><td>HP <b>${G.hp}/${hpMax()}</b></td><td>ATK <b>${pAtk()}</b></td><td>DEF <b>${pDef()}</b></td><td>最大エネルギー <b>${eMax()}</b></td></tr>
   <tr><td>MP <b>${G.mp}/${mpMax()}</b></td><td>SP未使用 <b>${G.sp}</b></td><td>習得ノード <b>${G.nodes.length}</b></td><td>クリ率 <b>${Math.round(pCrit()*100)}%</b></td></tr>
-  <tr><td>武器 <b>${WEAPONS[G.weapon].name}</b></td><td>防具 <b>${ARMORS[G.armor].name}</b></td><td>アクセ <b>${ACCESSORIES[G.accessory].name}</b></td><td>常時淫具 <b>${PTOYS[G.ptoy].name}</b></td></tr>
+  <tr><td>武器 <b>${WEAPONS[G.weapon].name}${upgLv('weapon',G.weapon)?' +'+upgLv('weapon',G.weapon):''}</b></td><td>防具 <b>${ARMORS[G.armor].name}${upgLv('armor',G.armor)?' +'+upgLv('armor',G.armor):''}</b></td><td>アクセ <b>${ACCESSORIES[G.accessory].name}</b></td><td>常時淫具 <b>${PTOYS[G.ptoy].name}</b></td></tr>
   <tr><td>発動淫具 <b>${ATOYS[G.atoy].name}</b></td><td>ポーション <b>${G.items.potion}</b></td><td>聖水 <b>${G.items.holy}</b></td><td>マナ水 <b>${G.items.mana}</b></td></tr></table>`; }
 
 function dchoiceHTML(){ const d=G.dun;
@@ -747,7 +757,17 @@ function treeHTML(){
 }
 
 function shopHTML(){
-  const wrow=(k,o,cur,slot)=>`<div class="srow ${cur===k?'owned':''}"><span class="n"><b>${o.name}</b><small>${o.note||''}</small></span>${cur===k?'<span class="hint">装備中</span>':`<button class="btn" data-buy="${slot}:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button>`}</div>`;
+  const upgradable=(slot)=>slot==='weapon'||slot==='armor';
+  const lvTag=(slot,k)=>upgradable(slot)&&upgLv(slot,k)>0?` <span class="uplv">+${upgLv(slot,k)}</span>`:'';
+  const upgBtn=(slot,k)=>{ if(!upgradable(slot))return ''; const lv=upgLv(slot,k);
+    if(lv>=UPG_MAX)return `<span class="hint">強化MAX(+${UPG_MAX})</span>`;
+    const c=upgCostNext(slot,k), st=slot==='weapon'?`ATK+${UPG_ATK}`:`DEF+${UPG_DEF}`;
+    return `<button class="btn upg" data-upg="${slot}" ${G.gold<c?'disabled':''}>⚒ 強化 +${lv}→+${lv+1} <small>${st}</small> <span class="price">${c}G</span></button>`; };
+  const wrow=(k,o,cur,slot)=>{ const eq=cur===k, up=upgradable(slot);
+    const rowcls='srow'+(eq?(up?' owned upsel':' owned'):'');
+    const right=eq?`<span class="eqp"><span class="hint">装備中</span>${upgBtn(slot,k)}</span>`
+      :`<button class="btn" data-buy="${slot}:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button>`;
+    return `<div class="${rowcls}"><span class="n"><b>${o.name}${lvTag(slot,k)}</b><small>${o.note||''}</small></span>${right}</div>`; };
   const toyrow=(k,o,slot)=>{ const owned=G.toysOwned.includes(k); const equipped=(slot==='ptoy'?G.ptoy:G.atoy)===k;
     return `<div class="srow ${equipped?'owned':''}"><span class="n"><b>${o.name}</b><small>${o.note||''}</small></span>${equipped?'<span class="hint">装備中</span>':owned?`<button class="btn" data-equip="${slot}:${k}">装備</button>`:`<button class="btn" data-buy="${slot}:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button>`}</div>`; };
   const itemrow=(k,o)=>`<div class="srow"><span class="n"><b>${o.name}</b><small>${o.note}・所持${G.items[k]}</small></span><button class="btn" data-buy="item:${k}" ${G.gold<o.cost?'disabled':''}>買う <span class="price">${o.cost}G</span></button></div>`;
@@ -831,6 +851,7 @@ $('app').addEventListener('click',ev=>{
   const sub=ev.target.closest('[data-sub]');
   if(sub){ const open=sub.classList.contains('open'); document.querySelectorAll('.act.open').forEach(x=>x.classList.remove('open')); if(!open)sub.classList.add('open'); ev.stopPropagation(); return; }
 
+  const upg=ev.target.closest('[data-upg]'); if(upg){ doUpgrade(upg.dataset.upg); return; }
   const buy=ev.target.closest('[data-buy]'); if(buy){ doBuy(buy.dataset.buy); return; }
   const eq=ev.target.closest('[data-equip]'); if(eq){ doEquip(eq.dataset.equip); return; }
 
@@ -866,6 +887,11 @@ function doBuy(spec){ const [slot,key]=spec.split(':');
   else{ G.toysOwned.push(key); if(slot==='ptoy'){G.ptoy=key;} else {G.atoy=key;} }
   log('購入: '+src.name+'(-'+src.cost+'G)','g'); render();
 }
+function doUpgrade(slot){ const key=slot==='weapon'?G.weapon:G.armor;
+  if(upgLv(slot,key)>=UPG_MAX)return; const c=upgCostNext(slot,key); if(G.gold<c)return;
+  G.gold-=c; const m=slot==='weapon'?G.wUpg:G.aUpg; m[key]=(m[key]||0)+1;
+  const nm=slot==='weapon'?WEAPONS[key].name:ARMORS[key].name;
+  log('強化: '+nm+' +'+m[key]+'('+(slot==='weapon'?'ATK':'DEF')+'+'+(slot==='weapon'?UPG_ATK:UPG_DEF)+' / -'+c+'G)','g'); render(); }
 function doEquip(spec){ const [slot,key]=spec.split(':'); if(slot==='ptoy')G.ptoy=key; else G.atoy=key; render(); }
 
 // ═══════════════════════ §5-15 検証ハーネス v3 ═══════════════════════
